@@ -291,29 +291,46 @@ function uid(){ return "id-" + Math.random().toString(36).slice(2, 10) + Date.no
 function nowIdx(){ const d = new Date(); return d.getFullYear()*12 + d.getMonth(); }
 
 /* ---------------- models & defaults ---------------- */
+/* ---------------------------------------------------------------
+   Sample data. Round, obviously-illustrative numbers for a fictional
+   household — NOT anyone's real finances. New users replace these in
+   onboarding; everything is editable in Settings afterwards.
+   --------------------------------------------------------------- */
 function defaultConfig(){
+  const y = new Date().getFullYear();
   return {
-    income:255000, hikeAnnual:8, hikeSwitch:20, bonus:200000,
-    rentExp:25000, livingExp:125000, wifeExp:30000, chennaiRent:30000, expInflation:6,
-    epfBal:1529000, epfMonthly:27230, epfRate:8.25,
-    npsBal:343000, npsMonthly:15884, npsRate:10,
-    usReturn:18, inReturn:12, usAlloc:60, liquidRet:6,
-    plRate:12, plEMI:19000,
-    chBal:2600000, chRate:8.5, chEMI:36000, chPrepay:0,
-    agBal:15000000, agRate:9, agEMI:110000, agPrepay:90000, agShare:40, agMaint:10,
-    commonFund:3000000, commonFundYear:2030,
+    // income
+    income:150000, hikeAnnual:8, hikeSwitch:20, hikeSwitchEvery:3, bonus:150000,
+    // expenses
+    rentExp:25000, livingExp:60000, depExp:0, otherIncome:0, expInflation:6,
+    // retirement accounts (EPF/NPS in India; any employer/pension scheme elsewhere)
+    epfBal:500000, epfMonthly:15000, epfRate:8.25,
+    npsBal:0, npsMonthly:0, npsRate:10,
+    // expected returns
+    usReturn:12, inReturn:12, usAlloc:30, liquidRet:6,
+    // personal / unsecured loan
+    plBal:0, plRate:12, plEMI:0,
+    // home loan
+    chBal:0, chRate:8.5, chEMI:0, chPrepay:0,
+    // second property, part-owned with family — off by default
+    spEnabled:false, spRentNow:0, spRentStartYear:y+1, spRentThen:0,
+    spGrowthPct:10, spGrowthEvery:3, spShare:100, spMaint:10,
+    spBal:0, spRate:9, spEMI:0, spPrepay:0,
+    windfall:0, windfallYear:y+4,
+    // goals & commitments
     goals: defaultGoals(), recurring: defaultRecurring(),
-    swr:4, retireYear:2035, efMonths:3, efSplit:50,
+    // safety and retirement
+    swr:4, retireYear:y+15, efMonths:6, efSplit:50,
     extraSavings:0, driftAlert:10000, postRetReturn:9
   };
 }
 function defaultActuals(){
   return {
-    plOutstanding:800000, usValue:4500, inValue:7000, fdSavings:2500,
-    epf:1529000, nps:343000,
-    chennaiProperty:9500000, agartalaProperty:0, vehicle:150000,
-    healthPersonal:3000000, healthEmployer:800000,
-    termSelf:10000000, termSpouse:10000000,
+    plOutstanding:0, usValue:0, inValue:200000, fdSavings:100000,
+    epf:500000, nps:0,
+    homeProperty:0, secondProperty:0, vehicle:0,
+    healthPersonal:1000000, healthEmployer:0,
+    termSelf:5000000, termSpouse:0,
     lastUpdated:null
   };
 }
@@ -323,11 +340,12 @@ function newGoal(){
     downPct:100, loanRate:9, loanYears:5, enabled:true };
 }
 function defaultGoals(){
+  const y = new Date().getFullYear();
   return [
-    { id:uid(), name:"Car", symbol:"car.fill", target:1500000, targetYear:2028, monthly:85000,
+    { id:uid(), name:"Car", symbol:"car.fill", target:1000000, targetYear:y+3, monthly:15000,
       stepUpPct:0, bucket:"liquid", actual:0, afterDebtFree:true, downPct:40, loanRate:9, loanYears:5, enabled:true },
-    { id:uid(), name:"Daughter's education", symbol:"graduationcap.fill", target:20000000, targetYear:2040,
-      monthly:50000, stepUpPct:8, bucket:"equity", actual:0, afterDebtFree:true, downPct:100,
+    { id:uid(), name:"Child's education", symbol:"graduationcap.fill", target:5000000, targetYear:y+14,
+      monthly:20000, stepUpPct:8, bucket:"equity", actual:0, afterDebtFree:true, downPct:100,
       loanRate:9, loanYears:5, enabled:true }
   ];
 }
@@ -336,46 +354,30 @@ function newRecurring(){
     anchorMonth:4, anchorYear:2026, inflate:true, enabled:true };
 }
 function defaultRecurring(){
+  const y = new Date().getFullYear();
   return [
-    { id:uid(), name:"Health insurance (family floater)", symbol:"cross.case.fill", amount:40000, frequency:"yearly", anchorMonth:4, anchorYear:2026, inflate:true, enabled:true },
-    { id:uid(), name:"Term insurance — you", symbol:"shield.lefthalf.filled", amount:15000, frequency:"yearly", anchorMonth:7, anchorYear:2026, inflate:true, enabled:true },
-    { id:uid(), name:"Term insurance — wife", symbol:"shield.lefthalf.filled", amount:12000, frequency:"yearly", anchorMonth:9, anchorYear:2026, inflate:true, enabled:true },
-    { id:uid(), name:"Daughter's school fees", symbol:"graduationcap.fill", amount:30000, frequency:"quarterly", anchorMonth:4, anchorYear:2026, inflate:true, enabled:true },
-    { id:uid(), name:"Car insurance", symbol:"car.fill", amount:12000, frequency:"yearly", anchorMonth:11, anchorYear:2026, inflate:true, enabled:true }
+    { id:uid(), name:"Health insurance (family floater)", symbol:"cross.case.fill", amount:25000, frequency:"yearly", anchorMonth:4, anchorYear:y, inflate:true, enabled:true },
+    { id:uid(), name:"Term insurance", symbol:"shield.lefthalf.filled", amount:12000, frequency:"yearly", anchorMonth:7, anchorYear:y, inflate:true, enabled:true },
+    { id:uid(), name:"School fees", symbol:"graduationcap.fill", amount:20000, frequency:"quarterly", anchorMonth:4, anchorYear:y, inflate:true, enabled:true },
+    { id:uid(), name:"Vehicle insurance", symbol:"car.fill", amount:8000, frequency:"yearly", anchorMonth:11, anchorYear:y, inflate:true, enabled:true }
   ];
 }
+/* Sample cards — placeholders showing how the tracker works. Replace with your own. */
 function defaultCards(){
   return [
-    { id:uid(), name:"Amex Platinum Travel", emoji:"🟢",
-      baseReward:"1 MR/₹50 base — weak. The spend milestones ARE the card.",
-      strategy:"PRIORITY: route the next ₹7,089 of ordinary spend here, then stop. 10,000 MR ≈ ₹4,500–5,000 on ₹7k spend is a ~65% return — the best deal in your wallet. After that, check whether the ₹4L annual tier is reachable before 22 Dec.",
-      due:0, points:20666, pointValue:0.47,
-      milestones:[
-        { id:uid(), title:"Next milestone — ₹7,089 to go", target:7089, progress:0, period:"yearly", reward:"10,000 MR points", deadline:"22 Dec 2026", valueINR:4700 },
-        { id:uid(), title:"₹4L annual tier (verify)", target:400000, progress:0, period:"yearly", reward:"25,000 MR + Taj voucher", deadline:"22 Dec 2026", valueINR:22000 }
-      ]},
-    { id:uid(), name:"HDFC Diners Black Metal", emoji:"⬛",
-      baseReward:"5 RP/₹150 ≈ 3.3% · SmartBuy 10X up to ~33%",
-      strategy:"Home base for general spend. This quarter, gap spend earns ~6–9% (base + milestone), so online shopping and Flipkart should route here instead of their own cards. Swiggy food still stays on the Swiggy card at 10%. Note: HDFC excludes rent, fuel, wallet loads and EMIs from rewards — those likely don't count toward the milestone either.",
-      due:0, points:38952, pointValue:1.0,
-      milestones:[
-        { id:uid(), title:"Quarterly spend → bonus points", target:400000, progress:0, period:"quarterly", reward:"10,000 RP", deadline:"30 Sep 2026", valueINR:10000 },
-        { id:uid(), title:"Annual spend → fee waiver", target:500000, progress:0, period:"yearly", reward:"₹10k fee waived", deadline:"", valueINR:10000 }
-      ]},
-    { id:uid(), name:"HDFC Swiggy", emoji:"🟠",
-      baseReward:"10% Swiggy (cap ₹1.5k/mo) · 5% online (cap ₹1.5k/mo) · 1% offline",
-      strategy:"Swiggy and Instamart only while the Diners quarterly milestone is live — 10% still beats Diners' ~9% marginal rate, but the 5% online tier does not. Revisit after 30 Sep.",
+    { id:uid(), name:"Everyday rewards card", emoji:"",
+      baseReward:"~3% back on general spend",
+      strategy:"Your default card for anything without a better option. Add your real card here — name, reward rate, point balance and what each point is realistically worth.",
       due:0, points:0, pointValue:1.0,
       milestones:[
-        { id:uid(), title:"Swiggy 10% cap this month", target:15000, progress:0, period:"monthly", reward:"₹1,500 max cashback", deadline:"", valueINR:1500 },
-        { id:uid(), title:"Annual spend → fee waiver", target:200000, progress:0, period:"yearly", reward:"₹500 fee waived", deadline:"", valueINR:500 }
+        { id:uid(), title:"Annual spend → fee waiver", target:300000, progress:0, period:"yearly", reward:"Annual fee waived", deadline:"", valueINR:2500 }
       ]},
-    { id:uid(), name:"Axis Flipkart", emoji:"🔵",
-      baseReward:"5% Flipkart · 4% Cleartrip/partners · 1% others",
-      strategy:"Parked this quarter — even Flipkart's 5% loses to Diners' ~6–9% marginal rate while the ₹4L milestone is in play. 1% elsewhere is your worst rate; never default here.",
+    { id:uid(), name:"Category card", emoji:"",
+      baseReward:"Higher rate on one category, low rate elsewhere",
+      strategy:"Use only inside its bonus category. Cards like this are worth carrying for one thing and never worth defaulting to.",
       due:0, points:0, pointValue:1.0,
       milestones:[
-        { id:uid(), title:"Annual spend → fee waiver", target:350000, progress:0, period:"yearly", reward:"₹500 fee waived", deadline:"", valueINR:500 }
+        { id:uid(), title:"Monthly cashback cap", target:15000, progress:0, period:"monthly", reward:"Max cashback for the month", deadline:"", valueINR:1500 }
       ]}
   ];
 }
@@ -404,7 +406,7 @@ const financed = g => g.target - fundedTarget(g);
 
 /* ---------------- store ---------------- */
 const KEY = "wealthpilot.v1";
-const STORE = { config:defaultConfig(), actuals:defaultActuals(), history:[], cards:defaultCards(), privacy:false, theme:"system" };
+const STORE = { config:defaultConfig(), actuals:defaultActuals(), history:[], cards:defaultCards(), privacy:false, theme:"system", onboarded:false };
 function load(){
   try{
     const raw = localStorage.getItem(KEY);
@@ -416,6 +418,7 @@ function load(){
     STORE.cards   = b.cards && b.cards.length ? b.cards : defaultCards();
     STORE.privacy = !!b.privacy;
     STORE.theme   = b.theme || "system";
+    STORE.onboarded = !!b.onboarded;
   }catch(e){ console.warn("load failed", e); }
 }
 function save(){
@@ -454,7 +457,7 @@ function netWorthOf(a, c, cards){
   const n = {
     us:a.usValue, ind:a.inValue, emergency:a.fdSavings, goalSavings:liquidGoalSavings,
     epf:a.epf, nps:a.nps,
-    chennai:a.chennaiProperty, agartala:a.agartalaProperty, vehicle:a.vehicle,
+    chennai:a.homeProperty, agartala:a.secondProperty, vehicle:a.vehicle,
     personalLoan:a.plOutstanding, chennaiLoan:c.chBal,
     cardDues:(cards||[]).reduce((t,x)=> t + (x.due||0), 0)
   };
@@ -470,19 +473,34 @@ function netWorthOf(a, c, cards){
 }
 
 /* ---------------- the engine ----------------
-   Month index = year*12 + month(0-based). Plan runs Aug 2026 → Jul 2040.
-   This is a line-for-line port of Engine.swift.
+   Month index = year*12 + month(0-based). The plan runs for 14 years
+   starting from the month the user opens the app.
+   Ported from Engine.swift, with the personal assumptions lifted out
+   into config so the plan describes whoever is using it.
 ----------------------------------------------- */
-const START_IDX = 2026*12 + 7;
-const END_IDX   = 2040*12 + 6;
+const PLAN_YEARS = 14;
+const START_IDX = nowIdx();
+const END_IDX   = START_IDX + PLAN_YEARS*12 - 1;
+const START_YEAR = Math.floor(START_IDX/12);
 const mr = annual => Math.pow(1 + annual/100, 1/12) - 1;
 
-function agRent(year, month){
-  if (year < 2027 || (year === 2027 && month < 5)) return 120000;
-  if (year === 2027) return 250000;
-  return 350000 * Math.pow(1.15, Math.floor((year - 2028) / 3));
+/* Gross monthly rent from the second property, before maintenance and EMI.
+   Starts at spRentNow, steps up to spRentThen from spRentStartYear, then
+   grows spGrowthPct every spGrowthEvery years. */
+function spRent(c, year, month){
+  if (!c.spEnabled) return 0;
+  const startY = Math.round(c.spRentStartYear);
+  if (year < startY) return c.spRentNow;
+  const base = c.spRentThen > 0 ? c.spRentThen : c.spRentNow;
+  const every = Math.max(1, Math.round(c.spGrowthEvery));
+  return base * Math.pow(1 + c.spGrowthPct/100, Math.floor((year - startY) / every));
 }
-const isSwitchYear = y => y > 2027 && (y - 2026) % 3 === 0;
+/* A bigger hike in job-switch years, every spGrowthEvery... years from the start. */
+function isSwitchYear(c, y){
+  const every = Math.round(c.hikeSwitchEvery || 0);
+  if (every <= 0) return false;
+  return y > START_YEAR && (y - START_YEAR) % every === 0;
+}
 
 function actualsOverride(a, goals){
   const ga = {};
@@ -504,19 +522,19 @@ function simulate(c, seedUS, seedIN, override){
   const epfR = mr(c.epfRate), npsR = mr(c.npsRate);
 
   let th = c.income, exp = c.rentExp + c.livingExp;
-  let wife = c.wifeExp, chRent = c.chennaiRent;
-  let pl = 800000, ch = c.chBal, ag = c.agBal;
+  let wife = c.depExp, chRent = c.otherIncome;
+  let pl = c.plBal, ch = c.chBal, ag = c.spEnabled ? c.spBal : 0;
   let ef = 0, ret = 0;
   let epf = c.epfBal, nps = c.npsBal;
   let usV = seedUS, inV = seedIN;
   const goalVal = {}, goalLoan = {}, goalEMI = {};
   goals.forEach(g => { goalVal[g.id] = 0; goalLoan[g.id] = 0; goalEMI[g.id] = 0; });
-  const cfYear = Math.round(c.commonFundYear);
+  const cfYear = Math.round(c.windfallYear);
 
   for (let idx = START_IDX; idx <= END_IDX; idx++){
     const yr = Math.floor(idx/12), mo = idx % 12;
     if (mo === 0){
-      th *= yr === 2027 ? 1.10 : (isSwitchYear(yr) ? 1 + c.hikeSwitch/100 : 1 + c.hikeAnnual/100);
+      th *= isSwitchYear(c, yr) ? 1 + c.hikeSwitch/100 : 1 + c.hikeAnnual/100;
       exp *= 1 + c.expInflation/100;
       wife *= 1 + c.expInflation/100;
       chRent *= 1 + c.expInflation/100;
@@ -553,8 +571,8 @@ function simulate(c, seedUS, seedIN, override){
       if (ch <= 0){ ch = 0; r.chDone = idx; }
     }
     if (ag > 0){
-      const i = ag * c.agRate / 1200; r.intAG += i;
-      ag += i - c.agEMI - c.agPrepay;
+      const i = ag * c.spRate / 1200; r.intAG += i;
+      ag += i - c.spEMI - c.spPrepay;
       if (ag <= 0){ ag = 0; r.agDone = idx; }
     }
     let goalLoanEMIsDue = 0;
@@ -573,8 +591,8 @@ function simulate(c, seedUS, seedIN, override){
     }
 
     // --- income and surplus ---
-    const famNet = agRent(yr, mo) * (1 - c.agMaint/100) - (ag > 0 ? c.agEMI : 0);
-    const agInc = Math.max(0, famNet * c.agShare / 100);
+    const famNet = spRent(c, yr, mo) * (1 - c.spMaint/100) - (ag > 0 ? c.spEMI : 0);
+    const agInc = Math.max(0, famNet * c.spShare / 100);
 
     let recurringDue = 0;
     for (const rp of c.recurring) if (rp.enabled) recurringDue += dueAmount(rp, idx, c.expInflation);
@@ -586,8 +604,8 @@ function simulate(c, seedUS, seedIN, override){
     surplus -= recurringDue;
 
     let lump = 0;
-    if (mo === 0 && yr >= 2027) lump += c.bonus * g;
-    if (mo === 0 && yr === cfYear) ret += c.commonFund;
+    if (mo === 0 && yr > START_YEAR) lump += c.bonus * g;
+    if (mo === 0 && yr === cfYear) ret += c.windfall;
 
     const s = { idx, year:yr, month:mo, th:0, exp:0, wifeExp:0, chRent:0,
                 pl:0, ch:0, ag:0, ef:0, efTarget:0, recurring:0,
@@ -618,7 +636,7 @@ function simulate(c, seedUS, seedIN, override){
       const alreadyFunded = v >= fundedTarget(gg);
       let contrib = 0;
       if (!alreadyFunded){
-        const steps = Math.max(0, yr - 2029);
+        const steps = Math.max(0, yr - START_YEAR);
         const planned = gg.monthly * Math.pow(1 + gg.stepUpPct/100, steps);
         contrib = Math.min(planned, Math.max(0, surplus));
         surplus -= contrib;
@@ -631,8 +649,12 @@ function simulate(c, seedUS, seedIN, override){
       goalVal[gg.id] = v;
       s.goalContrib[gg.id] = contrib;
 
-      if (!alreadyFunded && v >= fundedTarget(gg)){
-        if (r.goalFunded[gg.id] === undefined) r.goalFunded[gg.id] = idx;
+      // Mark the goal funded the first month its value reaches the target — however it
+      // got there. A long-horizon goal often crosses on growth alone in a month it
+      // receives no contribution; checking only contribution months missed those
+      // entirely and left the goal reading "—" forever despite being achieved.
+      if (v >= fundedTarget(gg) && r.goalFunded[gg.id] === undefined){
+        r.goalFunded[gg.id] = idx;
         const fin = financed(gg);
         if (fin > 0 && (goalLoan[gg.id] || 0) <= 0 && gg.loanYears > 0){
           const rm = gg.loanRate / 1200;
@@ -672,7 +694,7 @@ function simulate(c, seedUS, seedIN, override){
     // --- portfolio split & retirement accounts ---
     let equityContrib = retC;
     for (const gg of goals) if (gg.bucket === "equity") equityContrib += s.goalContrib[gg.id] || 0;
-    if (mo === 0 && yr === cfYear) equityContrib += c.commonFund;
+    if (mo === 0 && yr === cfYear) equityContrib += c.windfall;
     usV = usV * (1 + usR) + equityContrib * c.usAlloc / 100;
     inV = inV * (1 + inR) + equityContrib * (100 - c.usAlloc) / 100;
 
@@ -694,13 +716,13 @@ function simulate(c, seedUS, seedIN, override){
 
   // --- retirement maths ---
   const retireYear = Math.round(c.retireYear);
-  const yrsTo = retireYear - 2026;
+  const yrsTo = retireYear - START_YEAR;
   r.expThen = (c.rentExp + c.livingExp) * Math.pow(1 + c.expInflation/100, yrsTo);
   const atR = r.states.find(s => s.year === retireYear && s.month === 5) || r.states[r.states.length-1];
   r.atRetire = atR;
   const agOpen = atR.ag > 0;
-  const rentThen = agRent(retireYear+1, 0) * (1 - c.agMaint/100) - (agOpen ? c.agEMI : 0);
-  r.rentalIncome = Math.max(0, rentThen * c.agShare / 100);
+  const rentThen = spRent(c, retireYear+1, 0) * (1 - c.spMaint/100) - (agOpen ? c.spEMI : 0);
+  r.rentalIncome = Math.max(0, rentThen * c.spShare / 100);
   r.need = Math.max(0, r.expThen - r.rentalIncome) * 12 / (c.swr / 100);
   r.retAssets = atR.ret + atR.epf + atR.nps;
 
@@ -724,7 +746,7 @@ function driftBreakdown(plan, c, a){
     if (g.bucket === "liquid") d.actGoalsLiquid += g.actual || 0;
     d.goalRows.push({ id:g.id, name:g.name, planned, actual:g.actual||0 });
   }
-  d.commonFundAdj = new Date().getFullYear() >= Math.round(c.commonFundYear) ? c.commonFund : 0;
+  d.commonFundAdj = new Date().getFullYear() >= Math.round(c.windfallYear) ? c.windfall : 0;
   d.actUS = a.usValue; d.actIN = a.inValue; d.actEF = a.fdSavings;
   d.loanPlanned = plan.pl; d.loanActual = a.plOutstanding;
   d.planned = Math.max(0, d.planEF + d.planGoals + d.planRet - d.commonFundAdj);
@@ -742,10 +764,9 @@ function goalImpacts(p, real, c){
                    : `${-delta} month${delta === -1 ? "" : "s"} earlier`);
     return { id, name, symbol, planText:monthName(pi), realText:monthName(ri), deltaText:txt, worse:delta > 0 };
   };
-  const out = [
-    dateRow("ef", "Emergency fund", "lifepreserver.fill", p.efDone, real.efDone),
-    dateRow("pl", "Personal loan closed", "creditcard.fill", p.plDone, real.plDone)
-  ];
+  const out = [ dateRow("ef", "Emergency fund", "lifepreserver.fill", p.efDone, real.efDone) ];
+  if (STORE.config.plBal > 0 || (p.plDone !== null && p.plDone !== undefined))
+    out.push(dateRow("pl", "Personal loan closed", "creditcard.fill", p.plDone, real.plDone));
   for (const g of c.goals){
     if (!g.enabled) continue;
     const pf = p.goalFunded[g.id], rf = real.goalFunded[g.id];
@@ -802,7 +823,7 @@ function goalEMIsDue(m, c, sim){
   return total;
 }
 function actionText(plan, c){
-  if (!plan) return "Plan starts August 2026.";
+  if (!plan) return "Your plan starts this month.";
   const parts = [];
   if (plan.actEF > 0) parts.push(`${fmt(plan.actEF)} → emergency fund`);
   if (plan.actPL > 0) parts.push(`${fmt(plan.actPL)} extra → personal loan`);
@@ -1021,6 +1042,7 @@ function setTab(i){ TAB = i; STACK = []; render(); }
 const VIEWS = {};   // name -> fn(props) => {title, body, right?}
 
 function render(){
+  if (!STORE.onboarded){ renderOnboarding(); return; }
   const app = document.getElementById("screen");
   const nav = document.getElementById("nav");
   const top = STACK.length ? STACK[STACK.length-1] : { view: TABS[TAB].key, props:{} };
@@ -1064,6 +1086,8 @@ function refreshSheet(){ if (SHEET) renderSheet(); }
    SCREENS
    ========================================================= */
 const pts = (states, f) => states.map(s => [s.idx, f(s)]);
+/* Does this person have a personal loan at all? Hide it everywhere if not. */
+const hasPL = () => (STORE.config.plBal > 0 || STORE.actuals.plOutstanding > 0);
 
 /* ---------------- TODAY ---------------- */
 VIEWS.today = () => {
@@ -1137,9 +1161,9 @@ VIEWS.today = () => {
       + goalRow("lifepreserver.fill", C.safety, "Emergency fund",
           a.fdSavings >= (plan ? plan.efTarget : 1) ? "Funded" : "by " + monthName(s.efDone),
           a.fdSavings >= (plan ? plan.efTarget : 1) ? C.income : C.goals, ()=>go("emergency"))
-      + goalRow("creditcard.fill", C.outgo, "Personal loan",
+      + (hasPL() ? goalRow("creditcard.fill", C.outgo, "Personal loan",
           a.plOutstanding <= 0 ? "Closed" : "by " + monthName(s.plDone),
-          a.plOutstanding <= 0 ? C.income : C.goals, ()=>go("loanPayoff"))
+          a.plOutstanding <= 0 ? C.income : C.goals, ()=>go("loanPayoff")) : "")
       + goalRows
       + goalRow("beach.umbrella.fill", C.wealth, "Retirement", Math.round(retF) + "% funded",
           retF >= 100 ? C.income : (retF >= 70 ? C.goals : C.danger), ()=>go("retirement"))),
@@ -1196,11 +1220,12 @@ VIEWS.goals = () => {
       status: a.fdSavings >= (plan?plan.efTarget:1) ? "Funded" : "by " + monthName(s.efDone),
       statusTint: a.fdSavings >= (plan?plan.efTarget:1) ? C.income : C.goals,
       progress: a.fdSavings / Math.max(1, plan ? plan.efTarget : 1), builtIn:true, onTap:()=>go("emergency") }),
-    bigRow({ symbol:"creditcard.fill", tint:C.outgo, title:"Close personal loan",
+    hasPL() ? bigRow({ symbol:"creditcard.fill", tint:C.outgo, title:"Close personal loan",
       subtitle:`${fmt(a.plOutstanding)} left`,
       status: a.plOutstanding <= 0 ? "Closed" : "by " + monthName(s.plDone),
       statusTint: a.plOutstanding <= 0 ? C.income : C.goals,
-      progress: 1 - a.plOutstanding/800000, builtIn:true, onTap:()=>go("loanPayoff") }),
+      progress: c.plBal > 0 ? 1 - a.plOutstanding/c.plBal : 1,
+      builtIn:true, onTap:()=>go("loanPayoff") }) : "",
     c.goals.length ? "" : card(sect("No goals yet","target")
       + note("Add a goal — a car, a house deposit, a child's education, a business. Each one gets its own funding schedule and tells you when it's slipping."), {tight:true}),
     userGoals,
@@ -1253,17 +1278,17 @@ function cashFlowBody(){
     out += card(
       sect("Money in","arrow.down.circle.fill",C.income)
       + row("Salary (take-home)", fmt(plan.th), {symbol:"briefcase.fill", tint:C.income})
-      + row("Agartala rent (your share)", fmt(plan.agInc), {symbol:"building.2.fill", tint:C.income})
-      + row("Chennai rent", fmt(plan.chRent), {symbol:"house.fill", tint:C.income})
+      + (plan.agInc > 0 ? row("Second property (your share)", fmt(plan.agInc), {symbol:"building.2.fill", tint:C.income}) : "")
+      + (plan.chRent > 0 ? row("Other monthly income", fmt(plan.chRent), {symbol:"house.fill", tint:C.income}) : "")
       + (plan.month === 0 ? row("Annual bonus", fmt(c.bonus*plan.th/c.income), {symbol:"gift.fill", tint:C.income}) : "")
       + divider() + row("Total in", fmt(incomeOf(plan)), {em:true})
       + `<div style="height:6px"></div>`
       + sect("Money out","arrow.up.circle.fill",C.outgo)
       + row("House rent + living", fmt(plan.exp), {symbol:"cart.fill", tint:C.outgo})
-      + row("Wife's expenses", fmt(plan.wifeExp), {symbol:"person.fill", tint:C.outgo})
+      + (plan.wifeExp > 0 ? row("Dependants' expenses", fmt(plan.wifeExp), {symbol:"person.fill", tint:C.outgo}) : "")
       + recurringDueItems(c, plan.idx).map(e => row(e.item.name, fmt(e.amount), {symbol:e.item.symbol, tint:C.outgo})).join("")
       + (plan.pl > 0 ? row("Personal loan EMI", fmt(c.plEMI), {symbol:"creditcard.fill", tint:C.outgo}) : "")
-      + (plan.ch > 0 ? row("Chennai home EMI", fmt(c.chEMI + c.chPrepay), {symbol:"house.fill", tint:C.outgo}) : "")
+      + (plan.ch > 0 ? row("Home loan EMI", fmt(c.chEMI + c.chPrepay), {symbol:"house.fill", tint:C.outgo}) : "")
       + c.goals.filter(g => (plan.goalLoan[g.id]||0) > 0)
           .map(g => row(g.name + " loan EMI", fmt(s.goalLoanEMI[g.id]||0), {symbol:g.symbol, tint:C.outgo})).join("")
       + divider() + row("Total out", fmt(outgoOf(plan, c, emis)), {em:true})
@@ -1334,25 +1359,24 @@ function recurringBody(){
 
 function cardsBody(){
   const guide = [
-    ["Swiggy / Instamart","Swiggy Card","10% back (cap ₹1.5k/mo)","bag.fill"],
-    ["Flipkart / Cleartrip","Flipkart Card","5% / 4% back","cart.fill"],
-    ["Flights, hotels, vouchers","Diners → SmartBuy","10X points, up to ~33%","airplane"],
-    ["Other online shopping","Swiggy Card","5% to cap, then Diners","laptopcomputer"],
-    ["Utilities & small bills","Amex MRCC","4 × ₹1.5k → 1,000 pts","bolt.fill"],
-    ["Dining out","Diners Black","3.3% + dining perks","fork.knife"],
-    ["Fuel","Diners Black","surcharge waiver","fuelpump.fill"],
-    ["Everything else","Diners Black","3.3% — best base rate","creditcard.fill"]
+    ["Food delivery & groceries","Your best food card","often 5–10% back","bag.fill"],
+    ["Online shopping","Card tied to that retailer","5% is typical","cart.fill"],
+    ["Flights & hotels","Card with a travel portal","points are worth most here","airplane"],
+    ["Utilities & small bills","Whichever card has a milestone open","use them to close a target","bolt.fill"],
+    ["Dining out","Your best dining card","base rate plus perks","fork.knife"],
+    ["Fuel","Card with a surcharge waiver","the waiver beats the points","fuelpump.fill"],
+    ["Everything else","Your best base-rate card","this is your home-base card","creditcard.fill"]
   ];
   let out = card(sect("Reward points held","star.circle.fill",C.goals)
     + `<div class="hero rnd" style="color:${C.goals}">${esc(fmt(pointsValue()))}</div>`
-    + note("Across all cards, at best realistic redemption. Diners points are worth roughly twice as much via SmartBuy flights and hotels as via cashback or the product catalogue — redeem there."), {tight:true});
+    + note("Across all cards, valued at what you would realistically get for them. Points are usually worth about twice as much booked as flights or hotels as they are taken in cashback or merchandise — set each card's point value to the redemption you would actually use."), {tight:true});
 
   out += card(sect("Which card for what","wand.and.stars",C.goals)
     + guide.map(g => `<div class="row"><span style="color:${C.wealth};display:flex">${icon(g[3])}</span>`
       + `<span class="lbl" style="font-size:12.5px">${esc(g[0])}</span><span class="sp"></span>`
       + `<div style="text-align:right"><div style="font-size:12px;font-weight:600">${esc(g[1])}</div>`
       + `<div style="font-size:10.5px;color:var(--text2)">${esc(g[2])}</div></div></div>`).join("")
-    + note("Diners is home base. Swiggy card until its caps fill. Exactly 4 utility bills on Amex. Flipkart card only on Flipkart."));
+    + note("Pick one home-base card for everything ordinary, and only reach for a specialist card inside its bonus category or while its monthly cap is unfilled."));
 
   out += STORE.cards.map(cd => {
     const ms = cd.milestones.map(m => {
@@ -1387,7 +1411,7 @@ function cardsBody(){
 
   out += addButton("Add a card", ()=>{ STORE.cards.push({id:uid(),name:"New card",emoji:"",baseReward:"Reward rate",strategy:"When to use it",due:0,points:0,pointValue:1,milestones:[]}); save(); render(); });
   out += card(sect("Ground rules","exclamationmark.triangle.fill",C.goals)
-    + note("Chase a milestone only with spending you'd do anyway. The Diners quarterly bonus is worth ₹5–10k — never worth manufacturing ₹1.8L of spend to reach. HDFC also excludes rent, fuel, wallet loads and EMIs from rewards, so those likely don't count toward milestones either; verify before relying on them.\n\nReward rules change often — check caps and targets against your latest T&Cs; everything above is editable. And the rule that beats every optimisation: always pay in full. One month of 42% APR erases a year of rewards."), {tight:true});
+    + note("Chase a milestone only with spending you'd do anyway. A bonus worth a few thousand is never worth manufacturing lakhs of spend to reach — the marginal-return line above tells you when it stops being worth it.\n\nMost issuers exclude rent, fuel, wallet loads and EMIs from rewards, and often from milestone progress too; check your own terms before relying on them. Reward rules change often, so everything here is editable.\n\nAnd the rule that beats every optimisation: always pay in full. One month of revolving interest erases a year of rewards."), {tight:true});
   return out;
 }
 
@@ -1413,30 +1437,30 @@ function loansBody(){
   let out = card(sect("All balances","chart.line.downtrend.xyaxis",C.wealth)
     + lineChart([
         { name:"Personal", points: pts(s.yearly, m=>m.pl), color:C.outgo },
-        { name:"Chennai",  points: pts(s.yearly, m=>m.ch), color:C.goals },
-        { name:"Agartala", points: pts(s.yearly, m=>m.ag), color:C.wealth }
+        { name:"Home loan", points: pts(s.yearly, m=>m.ch), color:C.goals },
+        { name:"Second property", points: pts(s.yearly, m=>m.ag), color:C.wealth }
       ], { height:190, legend:true }));
 
-  out += loanCard({ title:"Personal loan", symbol:"creditcard.fill", tint:C.outgo,
+  if (hasPL()) out += loanCard({ title:"Personal loan", symbol:"creditcard.fill", tint:C.outgo,
     balance:STORE.actuals.plOutstanding, closes:s.plDone, interest:s.intPL,
     rows:[["Rate", c.plRate.toFixed(1)+"%"], ["EMI", fmt(c.plEMI)+" + surplus"]],
     note:"Your entire surplus blitzes this once the emergency fund is full.",
     schedule: s.states.filter(m=>m.actPL>0).map(m => [monthName(m.idx), `pay ${fmt(m.actPL + c.plEMI)} → ${fmt(m.pl)}`]) });
 
-  out += loanCard({ title:"Chennai home loan", symbol:"house.fill", tint:C.goals,
+  if (c.chBal > 0) out += loanCard({ title:"Home loan", symbol:"house.fill", tint:C.goals,
     balance: plan ? plan.ch : c.chBal, closes:s.chDone, interest:s.intCH,
     rows:[["Rate", c.chRate.toFixed(1)+"%"], ["EMI", fmt(c.chEMI + c.chPrepay)]],
-    note:"Serviced from salary; the property earns rent which funds your wife's expenses.",
+    note:"Serviced from salary each month, alongside everything else.",
     schedule: s.states.filter(m=>m.month===0 && m.ch>0).map(m => [String(m.year), fmt(m.ch)]) });
 
-  out += card(sect("What if you prepay Chennai?","slider.horizontal.3",C.goals)
+  if (c.chBal > 0) out += card(sect("What if you prepay the home loan?","slider.horizontal.3",C.goals)
     + fld("Extra prepay per month", ()=>c.chPrepay, v=>c.chPrepay=v, {min:0,max:100000,step:5000})
     + row("Closes", monthName(s.chDone)) + row("Total interest", fmt(s.intCH)));
 
-  out += loanCard({ title:"Agartala loan (family)", symbol:"building.2.fill", tint:C.wealth,
-    balance: plan ? plan.ag : c.agBal, closes:s.agDone, interest:s.intAG,
-    rows:[["Rate", c.agRate.toFixed(1)+"%"], ["EMI + prepay", fmt(c.agEMI)+" + "+fmt(c.agPrepay)]],
-    note:"Joint loan serviced by Agartala rentals, not your personal surplus. Your rental share jumps once it closes.",
+  if (c.spEnabled && c.spBal > 0) out += loanCard({ title:"Second property loan", symbol:"building.2.fill", tint:C.wealth,
+    balance: plan ? plan.ag : c.spBal, closes:s.agDone, interest:s.intAG,
+    rows:[["Rate", c.spRate.toFixed(1)+"%"], ["EMI + prepay", fmt(c.spEMI)+" + "+fmt(c.spPrepay)]],
+    note:"Serviced by that property's own rental income rather than your personal surplus, so your share of the rent rises once it closes.",
     schedule: s.states.filter(m=>m.month===0 && m.ag>0).map(m => [String(m.year), fmt(m.ag)]) });
 
   const financedGoals = c.goals.filter(g => g.enabled && financed(g) > 0);
@@ -1454,6 +1478,10 @@ function loansBody(){
   if (!financedGoals.length){
     out += card(sect("No goal loans","checkmark.circle.fill",C.income)
       + note("None of your goals are part-financed. Set a goal's upfront share below 100% to model buying it with a loan."), {tight:true});
+  }
+  if (!hasPL() && c.chBal <= 0 && !(c.spEnabled && c.spBal > 0) && !financedGoals.length){
+    out = card(sect("Debt free","checkmark.seal.fill",C.income)
+      + note("You have no loans recorded, so there's nothing to amortise here. Add balances under Settings → Loans if that changes, and this tab will fill in with payoff dates and total interest."), {tight:true});
   }
   return out;
 }
@@ -1498,7 +1526,7 @@ function portfolioBody(){
     + `<div style="display:flex;align-items:baseline;gap:8px"><span class="big rnd" style="color:${C.income}">${n.stocksPct.toFixed(1)}%</span>`
     + `<span style="font-size:12px;color:var(--text2)">of net worth · goal 60%</span></div>`
     + progress(n.stocksPct/60, C.income)
-    + note("Your wealth currently sits in property and retirement accounts. The plan moves this steadily from 2027 as surplus flows into equity."));
+    + note("Equity is what outpaces inflation over decades. If this share is low, most of your wealth is sitting in property or retirement accounts that you can't easily rebalance."));
 
   out += card(sect("Holdings","list.bullet",C.t2)
     + row("US stocks", fmt(a.usValue), {symbol:"globe.americas.fill", tint:C.wealth})
@@ -1506,8 +1534,8 @@ function portfolioBody(){
     + row("Emergency fund", fmt(a.fdSavings), {symbol:"lifepreserver.fill", tint:C.safety})
     + row("EPF", fmt(a.epf), {symbol:"building.columns.fill", tint:C.wealth})
     + row("NPS", fmt(a.nps), {symbol:"shield.lefthalf.filled", tint:C.wealth})
-    + row("Chennai property", fmt(a.chennaiProperty), {symbol:"house.fill", tint:C.goals})
-    + row("Agartala share", fmt(a.agartalaProperty), {symbol:"building.2.fill", tint:C.goals})
+    + row("Home / property", fmt(a.homeProperty), {symbol:"house.fill", tint:C.goals})
+    + row("Second property share", fmt(a.secondProperty), {symbol:"building.2.fill", tint:C.goals})
     + row("Vehicle", fmt(a.vehicle), {symbol:"car.2.fill", tint:C.goals}));
 
   out += linkCard("calendar.badge.clock", "Year by year — next 10 years", "", C.wealth, ()=>go("yearly"));
@@ -1542,13 +1570,13 @@ function projectionsBody(){
   out += stream({ title:"Salary", symbol:"briefcase.fill", tint:C.income,
     now: fmt(plan ? plan.th : c.income) + "/mo", atLabel:`At ${Math.round(c.retireYear)}`, atValue: fmt(atR.th)+"/mo",
     points: pts(s.yearly, m=>m.th),
-    note:`+10% Jan '27, then +${Math.round(c.hikeAnnual)}%/yr with +${Math.round(c.hikeSwitch)}% in switch years. Bonus grows with salary and is invested each January.` });
+    note:`+${Math.round(c.hikeAnnual)}%/yr, with +${Math.round(c.hikeSwitch)}% every ${Math.round(c.hikeSwitchEvery)} years to reflect a job switch. Bonus grows with salary and is invested each January.` });
 
   out += stream({ title:"Expenses", symbol:"cart.fill", tint:C.outgo,
     now: fmt((plan?plan.exp:0) + (plan?plan.wifeExp:0)) + "/mo",
     atLabel:`Household at ${Math.round(c.retireYear)}`, atValue: fmt(s.expThen)+"/mo",
     points: pts(s.yearly, m=>m.exp + m.wifeExp),
-    note:`Rent, living and your wife's expenses, all inflating at ${Math.round(c.expInflation)}%/yr.` });
+    note:`Rent, living costs and dependants' expenses, all inflating at ${Math.round(c.expInflation)}%/yr.` });
 
   out += stream({ title:"US stocks", symbol:"globe.americas.fill", tint:C.wealth,
     now: fmt(plan ? plan.usV : a.usValue), atLabel:`At ${Math.round(c.retireYear)}`, atValue: fmt(atR.usV),
@@ -1618,7 +1646,7 @@ VIEWS.yearly = () => {
     return card(`<div class="row"><span class="big rnd">${y.year}</span><span class="sp"></span>`
       + `<span class="num rnd" style="color:${C.wealth}">${esc(fmt(total))}</span></div>`
       + sect("Income per month","arrow.down.circle.fill",C.income)
-      + row("Take-home", fmt(y.th)) + row("Agartala rent (your share)", fmt(y.agInc))
+      + row("Take-home", fmt(y.th)) + (y.agInc > 0 ? row("Second property (your share)", fmt(y.agInc)) : "")
       + sect("Portfolio","chart.pie.fill",C.wealth)
       + row("US stocks", fmt(y.usV), {symbol:"globe.americas.fill", tint:C.wealth})
       + row("India stocks + MF", fmt(y.inV), {symbol:"globe.asia.australia.fill", tint:C.goals})
@@ -1629,8 +1657,8 @@ VIEWS.yearly = () => {
           .map(g => row("of which " + g.name, fmt(y.goalVal[g.id]), {symbol:g.symbol, tint: g.bucket==="liquid"?C.goals:C.income})).join("")
       + sect("Loans","creditcard.fill",C.outgo)
       + row("Personal", y.pl > 0 ? fmt(y.pl) : "closed", {tint: y.pl>0?C.outgo:C.income})
-      + row("Chennai", y.ch > 0 ? fmt(y.ch) : "closed", {tint: y.ch>0?C.outgo:C.income})
-      + row("Agartala (family)", y.ag > 0 ? fmt(y.ag) : "closed", {tint: y.ag>0?C.outgo:C.income})
+      + row("Home loan", y.ch > 0 ? fmt(y.ch) : "closed", {tint: y.ch>0?C.outgo:C.income})
+      + (STORE.config.spEnabled ? row("Second property", y.ag > 0 ? fmt(y.ag) : "closed", {tint: y.ag>0?C.outgo:C.income}) : "")
       + STORE.config.goals.filter(g => (y.goalLoan[g.id]||0) > 0)
           .map(g => row(g.name + " loan", fmt(y.goalLoan[g.id]))).join(""));
   }).join("");
@@ -1643,8 +1671,8 @@ VIEWS.insights = () => {
   const sim = sims().plan;
   const plan = sim.planNow();
   const th = plan ? plan.th : c.income;
-  const exp = (plan ? plan.exp : c.rentExp + c.livingExp) + (plan ? plan.wifeExp : c.wifeExp);
-  const passive = (plan ? plan.agInc : 0) + (plan ? plan.chRent : c.chennaiRent);
+  const exp = (plan ? plan.exp : c.rentExp + c.livingExp) + (plan ? plan.wifeExp : c.depExp);
+  const passive = (plan ? plan.agInc : 0) + (plan ? plan.chRent : c.otherIncome);
   const emis = (a.plOutstanding > 0 ? c.plEMI : 0) + (c.chBal > 0 ? c.chEMI : 0);
   const burn = exp + emis;
   const netBurn = Math.max(1, burn - passive);
@@ -1673,27 +1701,27 @@ VIEWS.insights = () => {
 
   const strengths = [];
   if (savingsRate >= 15) strengths.push({good:true, title:`Strong savings rate (${savingsRate.toFixed(0)}%)`,
-    detail:"You out-save most households, and it climbs further once the personal loan closes and Agartala rent starts."});
-  strengths.push({good:true, title:"A second income leg is coming",
-    detail:"Your Agartala rental share ramps from mid-2027 and grows 15% every three years — income that doesn't depend on your job."});
+    detail:"You out-save most households, and it climbs further as loans close and any rental income starts."});
+  if (c.spEnabled) strengths.push({good:true, title:"A second income leg is coming",
+    detail:`Your rental share starts in ${Math.round(c.spRentStartYear)} and grows ${Math.round(c.spGrowthPct)}% every ${Math.round(c.spGrowthEvery)} years — income that doesn't depend on your job.`});
   if (emiBurden < 30) strengths.push({good:true, title:`Healthy EMI burden (${emiBurden.toFixed(0)}%)`,
     detail:"Comfortably under the 40% danger zone, and shrinking as loans close."});
   if (funded >= 100) strengths.push({good:true, title:"Retirement target is reachable",
-    detail:"Projected assets cover the corpus needed — conditional on Agartala rents and disciplined monthly investing."});
-  strengths.push({good:true, title:"Real estate has compounded well",
-    detail:"Chennai went ₹62L → ₹95L since 2018 alongside rental income, and it collateralises future flexibility."});
+    detail:"Projected assets cover the corpus needed — conditional on the return assumptions holding and disciplined monthly investing."});
+  if (n.hard > 0) strengths.push({good:true, title:"You own hard assets",
+    detail:"Property and vehicles are illiquid, but they hold value, can produce rent, and can be borrowed against if you ever need flexibility."});
 
   const watch = [];
   if (runway < 6) watch.push({good:false, title:`Runway is only ${runway.toFixed(1)} months`,
     detail:`The plan handles this first, but until the fund is built you're exposed. ${fmt(Math.max(0, target - n.liquid))} to go.`});
   if (reConc > 60) watch.push({good:false, title:`${reConc.toFixed(0)}% of net worth is real estate`,
-    detail:"Illiquid and geographically concentrated across Chennai and Agartala — it can't be sold quickly or partially."});
+    detail:"Property is illiquid and concentrated — it can't be sold quickly or in parts, so it can't rescue a cash crunch."});
   if (n.stocksPct < 10) watch.push({good:false, title:"Stocks are far from your 60% goal",
     detail:`Currently ${n.stocksPct.toFixed(1)}%. Until this shifts, your wealth grows at real-estate pace rather than equity pace.`});
-  watch.push({good:false, title:"Single earning member until mid-2027",
-    detail:"Your salary funds everything until the Agartala rent starts. Term cover is the main gap to close."});
-  watch.push({good:false, title:"The plan leans on Agartala executing",
-    detail:"₹3.5L rent by 2028 and loan closure carry the retirement maths. Update the numbers as floors get tenanted."});
+  if (passive < exp*0.2) watch.push({good:false, title:"Almost everything rests on your salary",
+    detail:"With little passive income, a job loss stops the entire plan. Term cover and the emergency fund are the two things that blunt that."});
+  if (c.spEnabled) watch.push({good:false, title:"The plan leans on the rental income arriving",
+    detail:"Future rent and loan closure carry a lot of the retirement maths. Update those numbers as reality lands."});
 
   const body = [
     card(sect("If you lose your job tomorrow","lifepreserver.fill",runwayTint)
@@ -1705,13 +1733,13 @@ VIEWS.insights = () => {
       + row("Offset by rentals", "− " + fmt(passive), {symbol:"arrow.down.circle.fill", tint:C.income})
       + row("Net burn", fmt(netBurn), {em:true})
       + row(`Gap to ${Math.round(c.efMonths)}-month target`, fmt(Math.max(0, target - n.liquid)))
-      + note(`The plan builds this buffer first — ${Math.round(c.efSplit)}% of surplus plus the January bonus, funded by ${monthName(sim.efDone)}. EPF becomes partially withdrawable after 1–2 months of unemployment; Chennai rent keeps covering your wife's expenses.`)),
+      + note(`The plan builds this buffer first — ${Math.round(c.efSplit)}% of surplus plus the January bonus, funded by ${monthName(sim.efDone)}. In India, EPF also becomes partially withdrawable after 1–2 months of unemployment.`)),
 
     card(sect("Insurance cover","shield.lefthalf.filled",C.safety)
       + row("Health — personal floater", fmt(a.healthPersonal), {symbol:"cross.case.fill", tint:C.safety})
       + row("Health — employer", fmt(a.healthEmployer), {symbol:"briefcase.fill"})
       + row("Term life — you", fmt(a.termSelf) + `  (${multiple.toFixed(1)}×)`, {symbol:"person.fill", tint: multiple < 10 ? C.goals : C.income})
-      + row("Term life — wife", fmt(a.termSpouse), {symbol:"person.fill"})
+      + row("Term life — partner", fmt(a.termSpouse), {symbol:"person.fill"})
       + note(a.healthPersonal >= 2000000
           ? "Health cover is strong for a family of three — and it's the one that matters, since employer cover vanishes with the job."
           : "Personal health cover below ₹20L is thin for a family of three in a metro. Employer cover doesn't count — it disappears with the job.")
@@ -1769,13 +1797,13 @@ VIEWS.networth = () => {
       + group("Locked until retirement", n.locked, n.assets, C.wealth, [
           ["EPF", n.epf, "building.columns.fill"], ["NPS", n.nps, "shield.lefthalf.filled"]])
       + group("Hard assets", n.hard, n.assets, C.goals, [
-          ["Chennai property", n.chennai, "house.fill"], ["Agartala share", n.agartala, "building.2.fill"],
+          ["Home / property", n.chennai, "house.fill"], ["Second property share", n.agartala, "building.2.fill"],
           ["Vehicle", n.vehicle, "car.2.fill"]])
       + divider() + row("Total assets", fmt(n.assets), {tint:C.income, em:true})),
 
     card(sect("Liabilities","minus.circle.fill",C.outgo)
       + row("Personal loan", fmt(n.personalLoan), {symbol:"creditcard.fill", tint:C.outgo})
-      + row("Chennai home loan", fmt(n.chennaiLoan), {symbol:"house.fill", tint:C.outgo})
+      + row("Home loan", fmt(n.chennaiLoan), {symbol:"house.fill", tint:C.outgo})
       + row("Credit card dues", fmt(n.cardDues), {symbol:"creditcard.and.123", tint:C.outgo})
       + divider() + row("Total liabilities", fmt(n.liabilities), {tint:C.outgo, em:true})),
 
@@ -1794,7 +1822,7 @@ VIEWS.networth = () => {
           : "Your mix is reasonably balanced between liquid and hard assets.")),
 
     card(sect("What's not counted","info.circle",C.t2)
-      + note("The ₹1.5Cr Agartala construction loan is excluded because it's a joint family liability serviced by that property's own rental income, not from your salary. For the same reason, only your share of that property counts as an asset.\n\nEPF and NPS are included as assets even though they're locked, since they genuinely fund retirement. Property values only change when you update them; everything else moves with your monthly check-in."), {tight:true})
+      + note("A second-property loan shared with family is excluded here, because it's serviced by that property's own rental income rather than your salary — and for the same reason only your share of the property counts as an asset.\n\nRetirement accounts are included even though they're locked, since they genuinely fund retirement. Property values only change when you update them; everything else moves with your monthly check-in."), {tight:true})
   ].join("");
   return { title:"Net worth", body };
 };
@@ -1853,7 +1881,7 @@ VIEWS.impact = () => {
       + note("This is added to every month's surplus across the whole app. Set it back to zero if it stops being realistic — an over-optimistic plan is worse than an honest one."), {tight:true}) : "",
 
     card(sect("How this is calculated","function",C.t2)
-      + note(`Two simulations run side by side. The plan is the original trajectory from August 2026. Reality replays that same plan up to this month, then restarts from your actual balances — loan outstanding, emergency fund, equity, EPF and NPS — and projects forward. The difference between the two is what your deviation costs.\n\n${hurt === 0 ? "No goal has moved yet." : hurt + " goal" + (hurt === 1 ? " has" : "s have") + " moved."} Accuracy depends entirely on your last check-in being current.`), {tight:true})
+      + note(`Two simulations run side by side. The plan is your original trajectory from the month you started. Reality replays that same plan up to this month, then restarts from your actual balances — loan outstanding, emergency fund, equity, EPF and NPS — and projects forward. The difference between the two is what your deviation costs.\n\n${hurt === 0 ? "No goal has moved yet." : hurt + " goal" + (hurt === 1 ? " has" : "s have") + " moved."} Accuracy depends entirely on your last check-in being current.`), {tight:true})
   ].join("");
   return { title:"Impact of deviation", body };
 };
@@ -1876,7 +1904,7 @@ VIEWS.drift = () => {
       + row("Emergency fund", fmt(bd.planEF), {symbol:"lifepreserver.fill", tint:C.safety})
       + bd.goalRows.map(g => row(g.name, fmt(g.planned), {symbol:"target", tint:C.goals})).join("")
       + row("Retirement equity", fmt(bd.planRet), {symbol:"beach.umbrella.fill", tint:C.wealth})
-      + (bd.commonFundAdj > 0 ? row("less common-fund lump (not yours yet)", "− " + fmt(bd.commonFundAdj)) : "")
+      + (bd.commonFundAdj > 0 ? row("less expected windfall (not yours yet)", "− " + fmt(bd.commonFundAdj)) : "")
       + divider() + row("Planned total", fmt(bd.planned), {em:true})),
 
     card(sect("You actually hold","wallet.bifold.fill",C.income)
@@ -1902,7 +1930,7 @@ VIEWS.drift = () => {
     card(sect(ahead ? "Keep it up" : "How to close the gap","arrow.right.circle.fill", ahead ? C.income : C.goals)
       + note(ahead
           ? "You're holding more than the plan requires. Nothing to fix — keep saving the check-in each month so the streak and history build up."
-          : `The plan assumes you started investing in August 2026. Until you actually begin, this gap grows by roughly ${fmt(monthlyBuild)} a month.\n\nTwo ways to close it: put ${fmt(Math.abs(bd.drift))} into your emergency fund to catch up in one go, or accept the later dates — every goal will re-date itself once you update your real balances at the next check-in.`), {tight:true})
+          : `The plan assumes you started investing the month you set it up. Until you actually begin, this gap grows by roughly ${fmt(monthlyBuild)} a month.\n\nTwo ways to close it: put ${fmt(Math.abs(bd.drift))} into your emergency fund to catch up in one go, or accept the later dates — every goal will re-date itself once you update your real balances at the next check-in.`), {tight:true})
   ].join("");
   return { title:"Drift explained", body };
 };
@@ -1949,13 +1977,13 @@ VIEWS.retirement = () => {
     heroCard(Math.round(funded) + "%", `Funded for ${Math.round(c.retireYear)}`, "beach.umbrella.fill", C.wealth),
     factsCard([["Corpus needed", fmt(s.need)], ["Projected", fmt(s.retAssets)],
                ["— Equity bucket", fmt(s.atRetire.ret)], ["— EPF", fmt(s.atRetire.epf)], ["— NPS", fmt(s.atRetire.nps)],
-               ["Expenses then", fmt(s.expThen)+"/mo"], ["Agartala income then", fmt(s.rentalIncome)+"/mo"]]),
+               ["Expenses then", fmt(s.expThen)+"/mo"], ["Rental income then", fmt(s.rentalIncome)+"/mo"]]),
     card(lineChart([{ name:"Retirement assets", points: pts(s.yearly, m=>m.ret+m.epf+m.nps), color:C.wealth }],
       {height:150, filled:true, rule:s.need})),
     card(sect("Adjust","slider.horizontal.3",C.wealth)
       + fld("Retirement year", ()=>c.retireYear, v=>c.retireYear=v, {min:2030,max:2050,step:1})
       + fld("Safe withdrawal rate", ()=>c.swr, v=>c.swr=v, {min:2,max:8,step:0.25,suffix:"%"})),
-    explainCard(`Retirement absorbs whatever is left after the emergency fund, the loan and every goal above it. At ${Math.round(c.retireYear)} your expenses inflate to ${fmt(s.expThen)}/mo and Agartala rent covers ${fmt(s.rentalIncome)}/mo; the gap × 12 ÷ ${c.swr.toFixed(0)}% = ${fmt(s.need)} needed.`),
+    explainCard(`Retirement absorbs whatever is left after the emergency fund, the loan and every goal above it. At ${Math.round(c.retireYear)} your expenses inflate to ${fmt(s.expThen)}/mo and rental income covers ${fmt(s.rentalIncome)}/mo; the gap × 12 ÷ ${c.swr.toFixed(0)}% = ${fmt(s.need)} needed.`),
     linkCard("sunset.fill", "See the 10 years after retirement", "", C.goals, ()=>go("postRet"))
   ].join("");
   return { title:"Retirement", body };
@@ -1969,10 +1997,10 @@ VIEWS.postRet = () => {
   let corp = s.retAssets;
   for (let i=0;i<10;i++){
     const y = retYear + i;
-    const exp = (c.rentExp + c.livingExp) * Math.pow(1 + c.expInflation/100, y - 2026);
+    const exp = (c.rentExp + c.livingExp) * Math.pow(1 + c.expInflation/100, y - START_YEAR);
     const agOpen = s.agDone !== null ? (y*12 < s.agDone) : true;
-    const rentNet = agRent(y, 0) * (1 - c.agMaint/100) - (agOpen ? c.agEMI : 0);
-    const rent = Math.max(0, rentNet * c.agShare / 100);
+    const rentNet = spRent(c, y, 0) * (1 - c.spMaint/100) - (agOpen ? c.spEMI : 0);
+    const rent = Math.max(0, rentNet * c.spShare / 100);
     const draw = Math.max(0, exp - rent) * 12;
     corp = corp * (1 + c.postRetReturn/100) - draw;
     rows.push({ y, exp, rent, draw, corp });
@@ -1994,11 +2022,11 @@ VIEWS.postRet = () => {
       + note("Lower than your accumulation-phase return — portfolios usually shift toward safety at retirement.")),
     rows.map(r => card(`<div style="font-size:15px;font-weight:700">${r.y}</div>`
       + row("Expenses", fmt(r.exp)+"/mo", {symbol:"arrow.up.circle.fill", tint:C.outgo})
-      + row("Agartala rent", fmt(r.rent)+"/mo", {symbol:"arrow.down.circle.fill", tint:C.income})
+      + row("Rental income", fmt(r.rent)+"/mo", {symbol:"arrow.down.circle.fill", tint:C.income})
       + row("Withdrawn from corpus", fmt(r.draw)+"/yr", {symbol:"minus.circle.fill"})
       + row("Corpus at year end", fmt(r.corp), {em:true}), {tight:true})).join(""),
     card(sect("Notes","info.circle",C.t2)
-      + note("Rent keeps growing while withdrawals shrink in real terms — that's why the corpus can grow even in retirement. Goal money is excluded (it's already spoken for). NPS is mostly locked until 60 with 40% going to an annuity; EPF is accessible at retirement."), {tight:true})
+      + note("Rental income keeps growing while withdrawals shrink in real terms — that's why a corpus can grow even while you spend from it. Goal money is excluded here, since it's already spoken for. In India, NPS is mostly locked until 60 with 40% going to an annuity, while EPF is accessible at retirement."), {tight:true})
   ].join("");
   return { title:"After retirement", body };
 };
@@ -2058,14 +2086,16 @@ VIEWS.settings = () => {
     grp("Income",
       fld("Take-home per month", ()=>c.income, v=>c.income=v, {min:100000,max:1000000,step:5000})
       + fld("Annual hike", ()=>c.hikeAnnual, v=>c.hikeAnnual=v, {min:0,max:30,step:0.5,suffix:"%"})
-      + fld("Switch-year hike", ()=>c.hikeSwitch, v=>c.hikeSwitch=v, {min:0,max:50,step:1,suffix:"%"})
-      + fld("Annual bonus", ()=>c.bonus, v=>c.bonus=v, {min:0,max:1000000,step:25000})),
+      + fld("Job-switch hike", ()=>c.hikeSwitch, v=>c.hikeSwitch=v, {min:0,max:50,step:1,suffix:"%"})
+      + fld("A switch every", ()=>c.hikeSwitchEvery, v=>c.hikeSwitchEvery=v, {min:0,max:10,step:1,suffix:"yrs"})
+      + fld("Annual bonus", ()=>c.bonus, v=>c.bonus=v, {min:0,max:1000000,step:25000}),
+      "Set 'a switch every' to 0 if you don't expect to change jobs — then only the annual hike applies."),
 
     grp("Expenses",
       fld("House rent + maintenance", ()=>c.rentExp, v=>c.rentExp=v, {min:0,max:100000,step:1000})
       + fld("Household living", ()=>c.livingExp, v=>c.livingExp=v, {min:25000,max:400000,step:5000})
-      + fld("Wife's expenses", ()=>c.wifeExp, v=>c.wifeExp=v, {min:0,max:150000,step:2500})
-      + fld("Chennai rent received", ()=>c.chennaiRent, v=>c.chennaiRent=v, {min:0,max:150000,step:2500})
+      + fld("Dependants' expenses", ()=>c.depExp, v=>c.depExp=v, {min:0,max:150000,step:2500})
+      + fld("Other monthly income", ()=>c.otherIncome, v=>c.otherIncome=v, {min:0,max:150000,step:2500})
       + fld("Inflation", ()=>c.expInflation, v=>c.expInflation=v, {min:0,max:15,step:0.5,suffix:"%"})),
 
     grp("Expected returns",
@@ -2075,7 +2105,7 @@ VIEWS.settings = () => {
       + fld("Liquid / FD return", ()=>c.liquidRet, v=>c.liquidRet=v, {min:3,max:9,step:0.25,suffix:"%"})
       + fld("Post-retirement return", ()=>c.postRetReturn, v=>c.postRetReturn=v, {min:5,max:14,step:0.5,suffix:"%"})),
 
-    grp("Retirement accounts",
+    grp("Retirement accounts (EPF / NPS / pension)",
       fld("EPF balance", ()=>c.epfBal, v=>c.epfBal=v, {min:0,max:10000000,step:50000})
       + fld("EPF monthly", ()=>c.epfMonthly, v=>c.epfMonthly=v, {min:0,max:100000,step:1000})
       + fld("EPF rate", ()=>c.epfRate, v=>c.epfRate=v, {min:5,max:12,step:0.25,suffix:"%"})
@@ -2098,38 +2128,59 @@ VIEWS.settings = () => {
       "Everything else — car, education, property, anything you add — lives in the Goals tab."),
 
     grp("Loans",
-      fld("Personal loan rate", ()=>c.plRate, v=>c.plRate=v, {min:8,max:20,step:0.25,suffix:"%"})
-      + fld("Personal loan EMI", ()=>c.plEMI, v=>c.plEMI=v, {min:0,max:100000,step:1000})
-      + fld("Chennai balance", ()=>c.chBal, v=>c.chBal=v, {min:0,max:5000000,step:100000})
-      + fld("Chennai rate", ()=>c.chRate, v=>c.chRate=v, {min:6,max:12,step:0.1,suffix:"%"})
-      + fld("Chennai EMI", ()=>c.chEMI, v=>c.chEMI=v, {min:0,max:100000,step:1000})
-      + fld("Chennai extra prepay", ()=>c.chPrepay, v=>c.chPrepay=v, {min:0,max:100000,step:5000})),
+      fld("Personal loan balance", ()=>c.plBal, v=>c.plBal=v, {min:0,max:5000000,step:25000})
+      + fld("Personal loan rate", ()=>c.plRate, v=>c.plRate=v, {min:0,max:36,step:0.25,suffix:"%"})
+      + fld("Personal loan EMI", ()=>c.plEMI, v=>c.plEMI=v, {min:0,max:200000,step:1000})
+      + fld("Home loan balance", ()=>c.chBal, v=>c.chBal=v, {min:0,max:30000000,step:100000})
+      + fld("Home loan rate", ()=>c.chRate, v=>c.chRate=v, {min:0,max:15,step:0.1,suffix:"%"})
+      + fld("Home loan EMI", ()=>c.chEMI, v=>c.chEMI=v, {min:0,max:300000,step:1000})
+      + fld("Home loan extra prepay", ()=>c.chPrepay, v=>c.chPrepay=v, {min:0,max:200000,step:5000}),
+      "Set a balance to 0 for any loan you don't have — it then disappears from the plan."),
 
-    grp("Agartala property (family)",
-      fld("Loan balance", ()=>c.agBal, v=>c.agBal=v, {min:0,max:20000000,step:500000})
-      + fld("Loan rate", ()=>c.agRate, v=>c.agRate=v, {min:6,max:12,step:0.1,suffix:"%"})
-      + fld("EMI", ()=>c.agEMI, v=>c.agEMI=v, {min:0,max:300000,step:5000})
-      + fld("Prepay per month", ()=>c.agPrepay, v=>c.agPrepay=v, {min:0,max:300000,step:5000})
-      + fld("Your share of rent", ()=>c.agShare, v=>c.agShare=v, {min:0,max:100,step:5,suffix:"%"})
-      + fld("Maintenance", ()=>c.agMaint, v=>c.agMaint=v, {min:0,max:25,step:1,suffix:"%"})
-      + fld("Common fund share", ()=>c.commonFund, v=>c.commonFund=v, {min:0,max:10000000,step:250000})
-      + fld("Common fund received", ()=>c.commonFundYear, v=>c.commonFundYear=v, {min:2026,max:2040,step:1})),
+    grp("Second property (rental)",
+      toggle("I have a second / rental property", ()=>c.spEnabled, v=>c.spEnabled=v)
+      + (c.spEnabled
+        ? fld("Rent today (gross/mo)", ()=>c.spRentNow, v=>c.spRentNow=v, {min:0,max:1000000,step:5000})
+          + fld("Rent once fully let", ()=>c.spRentThen, v=>c.spRentThen=v, {min:0,max:2000000,step:5000})
+          + fld("From year", ()=>c.spRentStartYear, v=>c.spRentStartYear=v, {min:START_YEAR,max:START_YEAR+20,step:1})
+          + fld("Rent grows", ()=>c.spGrowthPct, v=>c.spGrowthPct=v, {min:0,max:30,step:1,suffix:"%"})
+          + fld("...every", ()=>c.spGrowthEvery, v=>c.spGrowthEvery=v, {min:1,max:10,step:1,suffix:"yrs"})
+          + fld("Your share of rent", ()=>c.spShare, v=>c.spShare=v, {min:0,max:100,step:5,suffix:"%"})
+          + fld("Maintenance", ()=>c.spMaint, v=>c.spMaint=v, {min:0,max:25,step:1,suffix:"%"})
+          + fld("Loan balance on it", ()=>c.spBal, v=>c.spBal=v, {min:0,max:50000000,step:500000})
+          + fld("Loan rate", ()=>c.spRate, v=>c.spRate=v, {min:0,max:15,step:0.1,suffix:"%"})
+          + fld("EMI", ()=>c.spEMI, v=>c.spEMI=v, {min:0,max:500000,step:5000})
+          + fld("Prepay per month", ()=>c.spPrepay, v=>c.spPrepay=v, {min:0,max:500000,step:5000})
+        : ""),
+      c.spEnabled
+        ? "Its loan is assumed to be serviced by the property's own rent, not your salary — so only your share of the surplus rent reaches your plan."
+        : "Turn this on if you own or part-own a property that produces rent, now or in future."),
+
+    grp("Expected windfall",
+      fld("Lump sum you expect", ()=>c.windfall, v=>c.windfall=v, {min:0,max:20000000,step:250000})
+      + (c.windfall > 0 ? fld("In year", ()=>c.windfallYear, v=>c.windfallYear=v, {min:START_YEAR,max:START_YEAR+20,step:1}) : ""),
+      "A maturing policy, an inheritance, a family settlement — anything one-off you expect to invest. Leave at 0 if none."),
 
     grp("Property & vehicle values",
-      fld("Chennai property", ()=>a.chennaiProperty, v=>a.chennaiProperty=v, {min:0,max:30000000,step:500000})
-      + fld("Agartala share value", ()=>a.agartalaProperty, v=>a.agartalaProperty=v, {min:0,max:50000000,step:500000})
+      fld("Home / property value", ()=>a.homeProperty, v=>a.homeProperty=v, {min:0,max:100000000,step:500000})
+      + fld("Second property (your share)", ()=>a.secondProperty, v=>a.secondProperty=v, {min:0,max:100000000,step:500000})
       + fld("Vehicle", ()=>a.vehicle, v=>a.vehicle=v, {min:0,max:3000000,step:50000})),
 
     grp("Insurance",
       fld("Health — personal floater", ()=>a.healthPersonal, v=>a.healthPersonal=v, {min:0,max:10000000,step:100000})
       + fld("Health — employer", ()=>a.healthEmployer, v=>a.healthEmployer=v, {min:0,max:5000000,step:100000})
       + fld("Term life — you", ()=>a.termSelf, v=>a.termSelf=v, {min:0,max:50000000,step:2500000})
-      + fld("Term life — wife", ()=>a.termSpouse, v=>a.termSpouse=v, {min:0,max:50000000,step:2500000})),
+      + fld("Term life — partner", ()=>a.termSpouse, v=>a.termSpouse=v, {min:0,max:50000000,step:2500000})),
+
+    grp("Setup",
+      `<div class="addbtn" onclick="RUN('${H(()=>{ if(confirm("Walk through setup again? Your current numbers are kept — you can edit them as you go.")) startOnboarding(); })}')">${icon("arrow.triangle.2.circlepath",18)}<span>Run setup again</span></div>`
+      + `<div class="addbtn" onclick="RUN('${H(()=>{ if(confirm("Load the sample household? This replaces your current numbers on this device.")){ STORE.config = defaultConfig(); STORE.actuals = defaultActuals(); STORE.cards = defaultCards(); STORE.history = []; _simCache.key = null; save(); render(); } })}')">${icon("list.bullet",18)}<span>Load the sample plan</span></div>`,
+      "The sample plan is a fictional household used to demonstrate the app — useful for seeing what a filled-in plan looks like."),
 
     grp("Your data",
       `<div class="addbtn" onclick="RUN('${H(exportData)}')">${icon("square.and.arrow.up",18)}<span>Export a backup file</span></div>`
       + `<div class="addbtn" onclick="RUN('${H(importData)}')">${icon("arrow.triangle.2.circlepath",18)}<span>Restore from a backup</span></div>`
-      + `<div class="addbtn danger" onclick="RUN('${H(()=>{ if(confirm("Reset everything to the default plan? This wipes your saved numbers on this device.")){ localStorage.removeItem(KEY); location.reload(); } })}')">${icon("trash",18)}<span>Reset to defaults</span></div>`,
+      + `<div class="addbtn danger" onclick="RUN('${H(()=>{ if(confirm("Erase everything on this device and start over? This cannot be undone.")){ localStorage.removeItem(KEY); location.reload(); } })}')">${icon("trash",18)}<span>Reset to defaults</span></div>`,
       "Everything stays in this browser on this device. Nothing is uploaded anywhere. Clearing your browser data will erase it, so export a backup now and then."),
 
     grp("Install it like an app",
@@ -2327,6 +2378,8 @@ function importData(){
         if (b.cards) STORE.cards = b.cards;
         STORE.privacy = !!b.privacy; PRIVACY = STORE.privacy;
         STORE.theme = b.theme || "system";
+        STORE.onboarded = true;
+        _simCache.key = null;
         save(); applyTheme(); render();
         alert("Backup restored.");
       }catch(e){ alert("That file didn't look like a WealthPilot backup."); }
@@ -2341,6 +2394,222 @@ function applyTheme(){
   document.documentElement.setAttribute("data-theme", STORE.theme === "system" ? "" : STORE.theme);
   if (STORE.theme === "system") document.documentElement.removeAttribute("data-theme");
 }
+/* =========================================================
+   ONBOARDING — first run
+   Collects only what the plan cannot be computed without.
+   Everything else starts on a sensible default and is editable
+   later in Settings.
+   ========================================================= */
+let ONB = 0;                 // current step
+const ONB_STEPS = 7;
+
+function startOnboarding(){ ONB = 0; STORE.onboarded = false; save(); render(); }
+
+function onbFinish(sample){
+  STORE.onboarded = true;
+  if (!sample) STORE.actuals.lastUpdated = null;
+  _simCache.key = null;
+  save();
+  TAB = 0; STACK = [];
+  render();
+}
+
+function renderOnboarding(){
+  const c = STORE.config, a = STORE.actuals;
+  const y = START_YEAR;
+  const nav = document.getElementById("nav");
+  const app = document.getElementById("screen");
+  document.getElementById("tabbar").innerHTML = "";
+
+  const stepBody = [
+    /* 0 — welcome */ () => ({
+      title:"Welcome",
+      body: card(`<div class="hero rnd" style="color:${C.wealth};font-size:30px">WealthPilot</div>`
+          + note("Most money apps tell you where your money went. This one tells you whether you are going to hit the things you are saving for — and the moment you start falling behind, which goal slips and by how many months.")
+          , {tight:true})
+        + card(sect("What you'll need","list.bullet",C.wealth)
+          + row("1. What you earn", "monthly take-home", {symbol:"briefcase.fill", tint:C.income})
+          + row("2. What you spend", "rent + living + dependants", {symbol:"cart.fill", tint:C.outgo})
+          + row("3. What you owe", "loan balances, rates, EMIs", {symbol:"creditcard.fill", tint:C.outgo})
+          + row("4. What you hold", "investments, savings, pension", {symbol:"drop.fill", tint:C.safety})
+          + row("5. What you're aiming at", "retirement year, one or two goals", {symbol:"target", tint:C.goals})
+          + note("Five short steps, about two minutes. Rough numbers are fine — every one of them is editable afterwards, and the plan re-dates itself the moment you change one."))
+        + card(sect("Where your data goes","lock.fill",C.safety)
+          + note("Nowhere. There is no account, no server and no sync. Everything you type is stored by your own browser on this device only, and nobody else — including whoever shared this link with you — can see it.\n\nBecause of that, clearing your browser data erases it. Settings has an Export button; use it once you've entered real numbers."), {tight:true})
+    }),
+
+    /* 1 — income */ () => ({
+      title:"What you earn",
+      body: card(sect("Monthly income","briefcase.fill",C.income)
+          + fldO("Take-home per month", ()=>c.income, v=>c.income=v, {min:0,max:2000000,step:5000})
+          + fldO("Other monthly income", ()=>c.otherIncome, v=>c.otherIncome=v, {min:0,max:1000000,step:2500})
+          + note("Take-home means what actually lands in your account after tax and deductions — not your CTC. Other income is rent received, freelance work, anything recurring."))
+        + card(sect("How it grows","chart.line.uptrend.xyaxis",C.income)
+          + fldO("Annual hike", ()=>c.hikeAnnual, v=>c.hikeAnnual=v, {min:0,max:30,step:0.5,suffix:"%"})
+          + fldO("Bigger hike on a job switch", ()=>c.hikeSwitch, v=>c.hikeSwitch=v, {min:0,max:50,step:1,suffix:"%"})
+          + fldO("Expect a switch every", ()=>c.hikeSwitchEvery, v=>c.hikeSwitchEvery=v, {min:0,max:10,step:1,suffix:"yrs"})
+          + fldO("Annual bonus", ()=>c.bonus, v=>c.bonus=v, {min:0,max:5000000,step:25000})
+          + note("Set the switch cadence to 0 if you don't plan to move jobs. The bonus is assumed to arrive each January and go straight into the plan."))
+    }),
+
+    /* 2 — expenses */ () => ({
+      title:"What you spend",
+      body: card(sect("Every month","cart.fill",C.outgo)
+          + fldO("Rent / housing", ()=>c.rentExp, v=>c.rentExp=v, {min:0,max:500000,step:1000})
+          + fldO("Living expenses", ()=>c.livingExp, v=>c.livingExp=v, {min:0,max:1000000,step:2500})
+          + fldO("Dependants' expenses", ()=>c.depExp, v=>c.depExp=v, {min:0,max:500000,step:2500})
+          + note("Housing is rent or maintenance. Living is food, bills, transport, everything ordinary. Dependants covers money you send to a partner, parents or anyone else each month."))
+        + card(sect("Inflation","arrow.up.circle.fill",C.outgo)
+          + fldO("Costs rise by", ()=>c.expInflation, v=>c.expInflation=v, {min:0,max:15,step:0.5,suffix:"%"})
+          + note("6% is a reasonable long-run assumption for India. This compounds over the whole plan, so it matters more than it looks."))
+        + card(sect("One thing people get wrong","exclamationmark.triangle.fill",C.goals)
+          + note("Don't include yearly or quarterly payments here — insurance premiums, school fees, property tax. Those get their own screen (Flow → Recurring) so the plan can charge them in the months they actually land, instead of pretending they're smooth."), {tight:true})
+    }),
+
+    /* 3 — debts */ () => ({
+      title:"What you owe",
+      body: card(sect("Personal / unsecured loan","creditcard.fill",C.outgo)
+          + fldO("Outstanding balance", ()=>c.plBal, v=>{ c.plBal = v; a.plOutstanding = v; }, {min:0,max:10000000,step:25000})
+          + (c.plBal > 0
+              ? fldO("Interest rate", ()=>c.plRate, v=>c.plRate=v, {min:0,max:36,step:0.25,suffix:"%"})
+                + fldO("Monthly EMI", ()=>c.plEMI, v=>c.plEMI=v, {min:0,max:500000,step:1000}) : "")
+          + note("Leave at 0 if you have none. This is the highest-priority thing in the plan: until it's gone, every spare rupee after the emergency fund goes at it, because paying off a 12% loan is a guaranteed 12% return."))
+        + card(sect("Home loan","house.fill",C.goals)
+          + fldO("Outstanding balance", ()=>c.chBal, v=>c.chBal=v, {min:0,max:50000000,step:100000})
+          + (c.chBal > 0
+              ? fldO("Interest rate", ()=>c.chRate, v=>c.chRate=v, {min:0,max:15,step:0.1,suffix:"%"})
+                + fldO("Monthly EMI", ()=>c.chEMI, v=>c.chEMI=v, {min:0,max:500000,step:1000}) : "")
+          + note("A home loan is treated differently from a personal loan — it's cheap and long, so the plan services it but doesn't rush to kill it."))
+        + card(sect("Credit cards","creditcard.and.123",C.outgo)
+          + note("Card dues are tracked separately under Flow → Cards, where you can also record reward milestones. Add them after setup."), {tight:true})
+    }),
+
+    /* 4 — what you hold */ () => ({
+      title:"What you hold",
+      body: card(sect("Investments","chart.pie.fill",C.wealth)
+          + fldO("Equity — stocks & mutual funds", ()=>a.inValue, v=>a.inValue=v, {min:0,max:100000000,step:25000})
+          + fldO("Overseas equity", ()=>a.usValue, v=>a.usValue=v, {min:0,max:100000000,step:25000})
+          + fldO("Cash, FD & liquid funds", ()=>a.fdSavings, v=>a.fdSavings=v, {min:0,max:50000000,step:25000})
+          + note("The cash figure doubles as your starting emergency fund. If you hold no overseas equity, leave it at 0 — the split between domestic and overseas is set in Settings."))
+        + card(sect("Retirement accounts","building.columns.fill",C.wealth)
+          + fldO("EPF / pension balance", ()=>{ return a.epf; }, v=>{ a.epf = v; c.epfBal = v; }, {min:0,max:100000000,step:50000})
+          + fldO("Going in each month", ()=>c.epfMonthly, v=>c.epfMonthly=v, {min:0,max:500000,step:1000})
+          + fldO("NPS balance", ()=>{ return a.nps; }, v=>{ a.nps = v; c.npsBal = v; }, {min:0,max:50000000,step:25000})
+          + fldO("NPS each month", ()=>c.npsMonthly, v=>c.npsMonthly=v, {min:0,max:500000,step:1000})
+          + note("Include the employer's share of EPF in the monthly figure — it's still your money. These are counted as assets even though they're locked, because they genuinely fund retirement."))
+        + card(sect("Property & vehicles","house.fill",C.goals)
+          + fldO("Property value", ()=>a.homeProperty, v=>a.homeProperty=v, {min:0,max:200000000,step:500000})
+          + fldO("Vehicles", ()=>a.vehicle, v=>a.vehicle=v, {min:0,max:20000000,step:50000})
+          + note("These only affect your net worth figure, not the monthly plan — you can't spend a house in an emergency."))
+    }),
+
+    /* 5 — safety & retirement */ () => ({
+      title:"Safety & retirement",
+      body: card(sect("Emergency fund","lifepreserver.fill",C.safety)
+          + fldO("Months of cover", ()=>c.efMonths, v=>c.efMonths=v, {min:0,max:12,step:1,suffix:"months"})
+          + fldO("Share of spare cash while building it", ()=>c.efSplit, v=>c.efSplit=v, {min:0,max:100,step:5,suffix:"%"})
+          + note("This gets funded before anything else — before loans, before goals. Six months is the usual advice; three if your income is very stable, more if it isn't."))
+        + card(sect("Retirement","beach.umbrella.fill",C.wealth)
+          + fldO("Retire in", ()=>c.retireYear, v=>c.retireYear=v, {min:y+1,max:y+45,step:1})
+          + fldO("Safe withdrawal rate", ()=>c.swr, v=>c.swr=v, {min:2,max:8,step:0.25,suffix:"%"})
+          + note("The withdrawal rate is how much of your corpus you can take each year without running it down. 4% is the common rule of thumb; lower is more cautious and demands a bigger corpus."))
+        + card(sect("Expected returns","chart.line.uptrend.xyaxis",C.income)
+          + fldO("Equity return", ()=>c.inReturn, v=>{ c.inReturn = v; }, {min:0,max:30,step:0.5,suffix:"%"})
+          + fldO("Cash / FD return", ()=>c.liquidRet, v=>c.liquidRet=v, {min:0,max:12,step:0.25,suffix:"%"})
+          + note("Be conservative here. An optimistic return assumption is the easiest way to build a plan that looks fine and isn't. 10–12% for Indian equity over long periods is defensible; anything above that is a hope, not a plan."))
+    }),
+
+    /* 6 — first goal */ () => {
+      const gs = c.goals;
+      return {
+        title:"What you're saving for",
+        body: card(sect("Your goals","target",C.goals)
+            + (gs.length ? "" : note("No goals yet. You can add them later, but the app is much more useful with at least one — a goal is what the 'you're falling behind' warning is measured against."))
+            + gs.map(g => `<div class="row" style="cursor:pointer;padding:3px 0" onclick="RUN('${H(()=>editGoal(g,false))}')">`
+                + `<span style="color:${g.bucket==="liquid"?C.goals:C.income};display:flex">${icon(g.symbol)}</span>`
+                + `<div style="flex:1"><div style="font-size:13px;font-weight:600">${esc(g.name)}</div>`
+                + `<div class="note">${esc(fmt(g.target))} by ${Math.round(g.targetYear)} · ${esc(fmt(g.monthly))}/mo</div></div>`
+                + `<button onclick="event.stopPropagation();RUN('${H(()=>{ c.goals = c.goals.filter(x=>x.id!==g.id); save(); render(); })}')" style="color:var(--text3);display:flex">${icon("trash",15)}</button>`
+                + chev() + `</div>`).join(""))
+          + addButton("Add a goal", ()=>editGoal(newGoal(), true))
+          + card(sect("How goals get funded","info.circle",C.t2)
+            + note("Money flows top to bottom: emergency fund first, then the personal loan, then each goal in the order you list them, and whatever survives goes to retirement. Reorder them any time from the Goals tab — priority is the single biggest lever you have.")
+            , {tight:true})
+          + card(sect("Two examples worth copying","lightbulb.fill",C.goals)
+            + note("A car in 3 years should sit in Liquid / FD — equity can fall 30% in a bad year and you can't wait it out on a short deadline.\n\nA child's education in 15 years should sit in Equity, and is worth a step-up: raising the monthly contribution 8% a year roughly tracks your salary and dramatically changes where you land."), {tight:true})
+      };
+    },
+
+    /* 7 — summary */ () => {
+      _simCache.key = null;
+      const s = simulate(c, a.usValue, a.inValue);
+      const plan = s.planNow();
+      const n = netWorthOf(a, c, STORE.cards);
+      const funded = s.need > 0 ? s.retAssets / s.need * 100 : 100;
+      const surplus = plan ? plan.surplus : 0;
+      const negative = surplus <= 0;
+      return {
+        title:"Your plan",
+        body: card(sect(negative ? "This doesn't balance yet" : "Here's what that gives you",
+              negative ? "exclamationmark.triangle.fill" : "checkmark.seal.fill", negative ? C.danger : C.income)
+            + `<div class="hero rnd" style="color:${negative ? C.danger : C.income}">${esc(fmt(surplus))}</div>`
+            + note(negative
+                ? "Your expenses and EMIs currently exceed your income, so there's nothing left to invest and the plan can't project forward. Go back and check the numbers — it's usually a monthly figure entered as an annual one, or an EMI counted twice."
+                : "That's what's left over each month after expenses, EMIs and lumpy payments — the engine of everything else."), {tight:true})
+          + card(sect("What the plan now says","target",C.wealth)
+            + row("Net worth today", fmt(n.net), {em:true})
+            + row("Emergency fund complete", monthName(s.efDone), {symbol:"lifepreserver.fill", tint:C.safety})
+            + (c.plBal > 0 ? row("Personal loan cleared", monthName(s.plDone), {symbol:"creditcard.fill", tint:C.outgo}) : "")
+            + c.goals.filter(g=>g.enabled).map(g => row(g.name,
+                s.goalFunded[g.id] !== undefined ? monthName(s.goalFunded[g.id])
+                  : (s.finalValue(g.id) >= fundedTarget(g)*0.95 ? "on track" : "short of target"),
+                {symbol:g.symbol, tint: g.bucket==="liquid"?C.goals:C.income})).join("")
+            + row(`Retirement ${Math.round(c.retireYear)}`, Math.round(funded) + "% funded",
+                {symbol:"beach.umbrella.fill", tint: funded >= 100 ? C.income : funded >= 70 ? C.goals : C.danger}))
+          + card(sect("What to do next","arrow.right.circle.fill",C.wealth)
+            + note("Add your yearly and quarterly payments under Flow → Recurring — premiums and school fees quietly distort the plan until they're in.\n\nThen come back on the same day each month and tap the check-in. That's the whole ritual: enter your real balances, and the app tells you whether you're ahead or behind and which goal moved."), {tight:true})
+          + card(sect("A caveat worth reading","info.circle",C.t2)
+            + note("This is a projection built from your own assumptions, not a forecast and not financial advice. Returns won't be smooth, salaries don't rise on schedule, and a single bad year changes the shape of everything. Treat the dates as a direction of travel, revisit the assumptions when reality disagrees, and talk to a qualified adviser before any large or irreversible decision."), {tight:true})
+      };
+    }
+  ][ONB]();
+
+  const isLast = ONB === ONB_STEPS;
+  const dots = Array.from({length:ONB_STEPS+1}, (_,i) =>
+    `<i style="width:${i===ONB?18:6}px;height:6px;border-radius:99px;background:${i===ONB?C.wealth:"var(--inset)"};display:block;transition:width .2s"></i>`).join("");
+
+  nav.innerHTML = `<div class="slot left">`
+    + (ONB > 0 ? `<button class="link" onclick="RUN('${H(()=>{ ONB--; render(); })}')">${icon("chevron.left",16)}Back</button>` : "")
+    + `</div><div class="title">${esc(stepBody.title)}</div><div class="slot right">`
+    + (ONB === 0 ? `<button class="link" onclick="RUN('${H(()=>onbFinish(true))}')">Skip</button>` : "")
+    + `</div>`;
+
+  app.innerHTML = `<div class="stack">`
+    + `<div style="display:flex;gap:5px;justify-content:center;padding:2px 0 6px">${dots}</div>`
+    + stepBody.body
+    + `<div class="addbtn center" style="background:${C.wealth};color:#fff;justify-content:center;font-size:15px"
+         onclick="RUN('${H(()=>{ if (isLast) onbFinish(false); else { ONB++; save(); render(); } })}')">`
+    + (isLast ? "Start using WealthPilot" : "Continue") + `</div>`
+    + (ONB === 0
+        ? `<div class="note t3 center" style="padding-bottom:8px">Just exploring? <b onclick="RUN('${H(()=>onbFinish(true))}')" style="color:var(--wealth);cursor:pointer">Skip and look around with sample data</b></div>`
+        : "")
+    + `</div>`;
+  app.scrollTop = 0;
+}
+
+/* onboarding field: re-renders the wizard rather than the tab screen */
+function fldO(label, get, set, o){
+  o = o || {};
+  const k = H(v => { const n = parseFloat(v); set(isFinite(n) ? n : 0); save(); render(); });
+  const val = get();
+  return `<div class="fld"><div class="top"><label>${esc(label)}</label>`
+    + `<input type="number" inputmode="decimal" value="${val}" onchange="RUNV('${k}', this.value)">`
+    + (o.suffix ? `<span class="sfx">${esc(o.suffix)}</span>` : "") + `</div>`
+    + (o.min !== undefined ? `<input type="range" min="${o.min}" max="${o.max}" step="${o.step||1}" value="${Math.min(o.max,Math.max(o.min,val))}"
+        oninput="this.closest('.fld').querySelector('input[type=number]').value=this.value"
+        onchange="RUNV('${k}', this.value)">` : "") + `</div>`;
+}
+
 /* Home-screen icon + manifest, generated in-page so this stays a single file. */
 function installMeta(){
   try{
