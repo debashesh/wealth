@@ -1,0 +1,2379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="WealthPilot">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#595CD9">
+<title>WealthPilot</title>
+<style>
+:root{
+  --income:#21A16B; --outgo:#DB4F4F; --wealth:#595CD9; --goals:#F09930;
+  --safety:#1A9EA8; --danger:#CC333D;
+  --bg:#EFEFF4; --surface:#FFFFFF; --inset:#F2F2F7;
+  --text:#000000; --text2:#6C6C70; --text3:#A0A0A5; --line:#00000014;
+  --radius:16px;
+}
+@media (prefers-color-scheme: dark){
+  :root{ --bg:#000000; --surface:#1C1C1E; --inset:#2C2C2E;
+    --text:#FFFFFF; --text2:#98989F; --text3:#6C6C70; --line:#FFFFFF1A; }
+}
+html[data-theme="light"]{ --bg:#EFEFF4; --surface:#FFFFFF; --inset:#F2F2F7;
+  --text:#000; --text2:#6C6C70; --text3:#A0A0A5; --line:#00000014; }
+html[data-theme="dark"]{ --bg:#000; --surface:#1C1C1E; --inset:#2C2C2E;
+  --text:#FFF; --text2:#98989F; --text3:#6C6C70; --line:#FFFFFF1A; }
+
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+html,body{margin:0;padding:0;height:100%;}
+body{
+  background:var(--bg); color:var(--text);
+  font:400 15px/1.4 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,system-ui,sans-serif;
+  overscroll-behavior-y:none;
+}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer;}
+input,select{font:inherit;color:inherit;}
+.rnd{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Rounded","Segoe UI",Roboto,system-ui,sans-serif;}
+
+/* ---------- shell ---------- */
+#app{display:flex;flex-direction:column;height:100dvh;max-width:520px;margin:0 auto;background:var(--bg);}
+#nav{
+  flex:0 0 auto; display:flex; align-items:center; gap:8px;
+  padding:calc(env(safe-area-inset-top) + 10px) 14px 10px;
+  background:color-mix(in srgb, var(--bg) 82%, transparent);
+  backdrop-filter:saturate(180%) blur(20px); -webkit-backdrop-filter:saturate(180%) blur(20px);
+  border-bottom:1px solid var(--line); position:sticky; top:0; z-index:20;
+}
+#nav .title{font-weight:700;font-size:17px;flex:1;text-align:center;}
+#nav .slot{min-width:64px;display:flex;align-items:center;gap:12px;}
+#nav .slot.right{justify-content:flex-end;}
+#nav button.link{color:var(--wealth);font-size:15px;display:flex;align-items:center;gap:2px;}
+#screen{flex:1 1 auto;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 14px 24px;}
+#tabbar{
+  flex:0 0 auto; display:flex; border-top:1px solid var(--line);
+  background:color-mix(in srgb, var(--bg) 82%, transparent);
+  backdrop-filter:saturate(180%) blur(20px); -webkit-backdrop-filter:saturate(180%) blur(20px);
+  padding-bottom:env(safe-area-inset-bottom);
+}
+#tabbar button{flex:1;padding:8px 0 6px;display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--text3);}
+#tabbar button.on{color:var(--wealth);}
+#tabbar span{font-size:10px;font-weight:600;}
+
+/* ---------- primitives ---------- */
+.stack{display:flex;flex-direction:column;gap:14px;}
+.card{background:var(--surface);border-radius:var(--radius);padding:16px;display:flex;flex-direction:column;gap:10px;}
+.card.tight{gap:6px;}
+.card.tap{cursor:pointer;}
+.card.tap:active{opacity:.6;}
+.sect{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700;letter-spacing:.06em;color:var(--text2);text-transform:uppercase;}
+.sect svg{width:13px;height:13px;}
+.hero{font-size:36px;font-weight:700;line-height:1.05;letter-spacing:-.02em;}
+.big{font-size:24px;font-weight:700;}
+.num{font-size:17px;font-weight:600;}
+.sml{font-size:13px;font-weight:600;}
+.note{font-size:11.5px;color:var(--text2);line-height:1.45;}
+.note.t3{color:var(--text3);}
+.row{display:flex;align-items:center;gap:8px;font-size:13px;}
+.row .lbl{color:var(--text2);}
+.row .lbl.em{color:var(--text);}
+.row .sp{flex:1;min-width:8px;}
+.row .val{font-size:13px;font-weight:600;text-align:right;}
+.row .val.em{font-size:17px;}
+.row svg{width:16px;height:16px;flex:0 0 18px;color:var(--text2);}
+.divider{height:1px;background:var(--line);margin:2px 0;}
+.pill{display:inline-block;font-size:10px;font-weight:700;padding:4px 9px;border-radius:99px;white-space:nowrap;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.tile{background:var(--surface);border-radius:var(--radius);padding:14px;display:flex;flex-direction:column;gap:4px;}
+.tile .k{display:flex;align-items:center;gap:5px;font-size:10px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--text2);}
+.tile .k svg{width:11px;height:11px;}
+.tile .v{font-size:22px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.tile .c{font-size:11px;color:var(--text3);}
+.avatar{width:40px;height:40px;border-radius:99px;display:grid;place-items:center;flex:0 0 40px;}
+.avatar svg{width:18px;height:18px;}
+.avatar.sm{width:36px;height:36px;flex-basis:36px;}
+.bar{height:8px;border-radius:99px;background:var(--inset);overflow:hidden;}
+.bar > i{display:block;height:100%;border-radius:99px;}
+.inset{background:var(--inset);border-radius:12px;padding:10px;display:flex;flex-direction:column;gap:6px;}
+.chev{width:12px;height:12px;color:var(--text3);flex:0 0 12px;}
+.seg{display:flex;background:var(--inset);border-radius:9px;padding:2px;gap:2px;margin-bottom:12px;}
+.seg button{flex:1;padding:6px 4px;border-radius:7px;font-size:12.5px;font-weight:600;color:var(--text2);}
+.seg button.on{background:var(--surface);color:var(--text);box-shadow:0 1px 3px #0000001f;}
+.addbtn{background:var(--surface);border-radius:var(--radius);padding:16px;display:flex;align-items:center;gap:8px;color:var(--wealth);font-size:14px;font-weight:600;}
+.addbtn svg{width:18px;height:18px;}
+.banner{border-radius:18px;padding:18px;color:#fff;background:linear-gradient(135deg,#292A6B,#1A5C7A);display:flex;flex-direction:column;gap:8px;}
+.banner .k{display:flex;align-items:center;gap:6px;font-size:10.5px;font-weight:700;letter-spacing:.08em;opacity:.75;}
+.banner .k svg{width:12px;height:12px;}
+.banner .v{font-size:15px;font-weight:600;line-height:1.4;}
+
+/* ---------- fields ---------- */
+.fld{display:flex;flex-direction:column;gap:7px;}
+.fld .top{display:flex;align-items:center;gap:8px;}
+.fld .top label{font-size:13px;color:var(--text2);flex:1;}
+.fld input[type=number],.fld input[type=text]{
+  width:120px;text-align:right;background:var(--inset);border:0;border-radius:8px;
+  padding:6px 10px;font-size:13px;font-weight:600;-moz-appearance:textfield;}
+.fld input[type=text].wide{width:100%;text-align:left;}
+.fld input::-webkit-outer-spin-button,.fld input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
+.fld .sfx{font-size:12px;color:var(--text3);}
+input[type=range]{width:100%;accent-color:var(--wealth);height:22px;}
+.toggle{display:flex;align-items:center;gap:8px;font-size:13px;}
+.toggle .sp{flex:1;}
+.sw{width:44px;height:26px;border-radius:99px;background:var(--inset);position:relative;transition:background .15s;flex:0 0 44px;}
+.sw.on{background:var(--income);}
+.sw i{position:absolute;top:2px;left:2px;width:22px;height:22px;border-radius:99px;background:#fff;box-shadow:0 1px 3px #0003;transition:transform .15s;}
+.sw.on i{transform:translateX(18px);}
+.symrow{display:flex;gap:10px;overflow-x:auto;padding:4px 0;}
+.symrow button{width:40px;height:40px;border-radius:99px;background:var(--inset);display:grid;place-items:center;flex:0 0 40px;color:var(--text2);}
+.symrow button.on{background:var(--wealth);color:#fff;}
+.symrow svg{width:18px;height:18px;}
+
+/* ---------- sheet ---------- */
+#sheet{position:fixed;inset:0;z-index:60;display:none;}
+#sheet.open{display:block;}
+#sheet .scrim{position:absolute;inset:0;background:#0006;}
+#sheet .panel{
+  position:absolute;left:0;right:0;bottom:0;max-height:92dvh;max-width:520px;margin:0 auto;
+  background:var(--bg);border-radius:16px 16px 0 0;display:flex;flex-direction:column;
+  animation:up .22s ease;}
+@keyframes up{from{transform:translateY(100%)}to{transform:translateY(0)}}
+#sheet .head{display:flex;align-items:center;padding:14px;border-bottom:1px solid var(--line);}
+#sheet .head .t{flex:1;text-align:center;font-weight:700;font-size:16px;}
+#sheet .head button{color:var(--wealth);font-size:15px;min-width:64px;}
+#sheet .head button.done{text-align:right;font-weight:700;}
+#sheet .body{overflow-y:auto;padding:14px 14px calc(env(safe-area-inset-bottom) + 24px);display:flex;flex-direction:column;gap:14px;}
+.danger{color:var(--danger);}
+.center{text-align:center;}
+svg.chart{display:block;width:100%;overflow:visible;}
+.legend{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;}
+.legend div{display:flex;align-items:center;gap:5px;font-size:10.5px;color:var(--text2);}
+.legend i{width:14px;height:3px;border-radius:99px;display:block;}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="nav"><div class="slot left"></div><div class="title">WealthPilot</div><div class="slot right"></div></div>
+  <div id="screen"></div>
+  <div id="tabbar"></div>
+</div>
+<div id="sheet"><div class="scrim"></div><div class="panel"><div class="head"></div><div class="body"></div></div></div>
+
+<script>
+"use strict";
+/* =======================================================================
+   WealthPilot — web edition
+   Ported from the SwiftUI app (Models.swift / Engine.swift / *View.swift).
+   All state lives in localStorage on this device. Nothing is uploaded.
+   ======================================================================= */
+
+/* ---------------- icons (SF Symbol name -> inline svg) ---------------- */
+const P = (d) => `<path d="${d}"/>`;
+const ICON = {
+  "chart.pie.fill":'<path d="M12 3a9 9 0 1 0 9 9h-9V3z"/><path d="M14 2.5A9 9 0 0 1 21.5 10H14V2.5z"/>',
+  "sun.max.fill":'<circle cx="12" cy="12" r="4.5"/><path d="M12 1.5v2M12 20.5v2M1.5 12h2M20.5 12h2M4.6 4.6l1.4 1.4M18 18l1.4 1.4M19.4 4.6L18 6M6 18l-1.4 1.4"/>',
+  "arrow.left.arrow.right":'<path d="M7 7H20l-3-3M17 17H4l3 3"/>',
+  "target":'<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1"/>',
+  "lightbulb.fill":'<path d="M9 18h6M10 21h4M12 2a6.5 6.5 0 0 0-4 11.6V16h8v-2.4A6.5 6.5 0 0 0 12 2z"/>',
+  "bolt.fill":'<path d="M13 2L4 14h6l-1 8 9-12h-6l1-8z"/>',
+  "checkmark.circle.fill":'<circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.6 2.6L16 9.5" stroke="var(--surface)" stroke-width="2.2" fill="none"/>',
+  "checkmark.seal.fill":'<path d="M12 2l2.3 2 3-.3 1 2.9 2.7 1.4-1 2.9 1 2.9-2.7 1.4-1 2.9-3-.3L12 22l-2.3-2-3 .3-1-2.9L3 16l1-2.9L3 10.2 5.7 8.8l1-2.9 3 .3L12 2z"/><path d="M8.4 12.4l2.4 2.4 4.6-4.8" stroke="var(--surface)" stroke-width="2" fill="none"/>',
+  "exclamationmark.triangle.fill":'<path d="M12 3.2L1.8 20.3h20.4L12 3.2z"/><path d="M12 9v5M12 17.2v.2" stroke="var(--surface)" stroke-width="2" stroke-linecap="round"/>',
+  "arrow.down.circle.fill":'<circle cx="12" cy="12" r="9"/><path d="M12 7.5v8M8.5 12.5L12 16l3.5-3.5" stroke="var(--surface)" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
+  "arrow.up.circle.fill":'<circle cx="12" cy="12" r="9"/><path d="M12 16.5v-8M8.5 11.5L12 8l3.5 3.5" stroke="var(--surface)" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
+  "arrow.up.right.circle.fill":'<circle cx="12" cy="12" r="9"/><path d="M9 15l6-6M10 9h5v5" stroke="var(--surface)" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
+  "arrow.down.right.circle.fill":'<circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 10v5h-5" stroke="var(--surface)" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
+  "arrow.right.circle.fill":'<circle cx="12" cy="12" r="9"/><path d="M8 12h8M12.5 8.5L16 12l-3.5 3.5" stroke="var(--surface)" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
+  "drop.fill":'<path d="M12 2.5S5.5 10 5.5 14.5a6.5 6.5 0 0 0 13 0C18.5 10 12 2.5 12 2.5z"/>',
+  "creditcard.fill":'<rect x="2.5" y="5" width="19" height="14" rx="2.5"/><path d="M2.5 9.5h19" stroke="var(--surface)" stroke-width="2"/>',
+  "creditcard.and.123":'<rect x="2.5" y="5" width="19" height="14" rx="2.5"/><path d="M2.5 9.5h19" stroke="var(--surface)" stroke-width="2"/>',
+  "lifepreserver.fill":'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4" fill="var(--surface)"/><path d="M5.6 5.6l3 3M15.4 15.4l3 3M18.4 5.6l-3 3M8.6 15.4l-3 3" stroke="var(--surface)" stroke-width="1.8"/>',
+  "beach.umbrella.fill":'<path d="M12 3C7 3 3 7 3 11h18c0-4-4-8-9-8z"/><path d="M12 11v10" stroke-width="2"/>',
+  "car.fill":'<path d="M5 16.5h14M4 11l1.6-4.2A2 2 0 0 1 7.5 5.5h9a2 2 0 0 1 1.9 1.3L20 11v5.5a1 1 0 0 1-1 1h-1.5a1 1 0 0 1-1-1V16h-9v.5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V11z"/><circle cx="7.5" cy="13.5" r="1.1" fill="var(--surface)"/><circle cx="16.5" cy="13.5" r="1.1" fill="var(--surface)"/>',
+  "car.2.fill":'<path d="M3 15h12M2 11l1.4-3.6A2 2 0 0 1 5.3 6h7.4a2 2 0 0 1 1.9 1.4L16 11v4.5a1 1 0 0 1-1 1h-1a1 1 0 0 1-1-1V15H5v.5a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V11z"/><path d="M18 9h1.5a2 2 0 0 1 1.9 1.4L22.5 14v3.5a1 1 0 0 1-1 1h-1a1 1 0 0 1-1-1V17h-2" fill="none" stroke-width="1.6"/>',
+  "graduationcap.fill":'<path d="M12 3L1.5 8.5 12 14l10.5-5.5L12 3z"/><path d="M5.5 11v4.5c0 1.7 2.9 3 6.5 3s6.5-1.3 6.5-3V11" fill="none" stroke-width="1.8"/>',
+  "house.fill":'<path d="M3 11.5L12 4l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1v-8.5z"/>',
+  "building.2.fill":'<path d="M3 21V9l6-3v15H3z"/><path d="M10 21V4l8 3v14h-8z"/><path d="M13 9h2M13 13h2M13 17h2M5.5 12h1.5M5.5 16h1.5" stroke="var(--surface)" stroke-width="1.3"/>',
+  "building.columns.fill":'<path d="M12 3L2.5 8h19L12 3z"/><path d="M5 10v8M9.5 10v8M14.5 10v8M19 10v8M2.5 20.5h19" stroke-width="1.8" fill="none"/>',
+  "briefcase.fill":'<rect x="2.5" y="7" width="19" height="12" rx="2"/><path d="M9 7V5.5a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 5.5V7" fill="none" stroke-width="1.8"/>',
+  "gift.fill":'<rect x="3" y="9" width="18" height="11" rx="1.5"/><path d="M2 8h20v4H2z"/><path d="M12 8v12" stroke="var(--surface)" stroke-width="1.8"/><path d="M12 8s-4.5-.5-4.5-3S12 8 12 8zM12 8s4.5-.5 4.5-3S12 8 12 8z" stroke-width="1.4"/>',
+  "camera.fill":'<rect x="2.5" y="7" width="19" height="13" rx="2.5"/><circle cx="12" cy="13.5" r="3.6" fill="var(--surface)"/><path d="M8.5 7l1.3-2.5h4.4L15.5 7"/>',
+  "heart.fill":'<path d="M12 20.5S3.5 15 3.5 9.6A4.6 4.6 0 0 1 12 7a4.6 4.6 0 0 1 8.5 2.6C20.5 15 12 20.5 12 20.5z"/>',
+  "airplane":'<path d="M21 12l-8-1.5V5a1 1 0 0 0-2 0v5.5L3 12v2l8-1v3.5l-2.5 1.5V20l3.5-1 3.5 1v-2l-2.5-1.5V13l8 1v-2z"/>',
+  "globe.americas.fill":'<circle cx="12" cy="12" r="9"/><path d="M8 5.5l1.5 2.5-1 2.5 2 1 .5 3 2 1.5 1-2.5 2.5-1V9l-3 .5-2-2h-3.5z" fill="var(--surface)"/>',
+  "globe.asia.australia.fill":'<circle cx="12" cy="12" r="9"/><path d="M6 8.5l3 1 2-1.5 3 .5-.5 2.5-2.5 1 .5 3-2.5.5-1.5-2.5-2-1.5.5-3zM16 15l2 .5-.5 2-2-.5.5-2z" fill="var(--surface)"/>',
+  "shield.lefthalf.filled":'<path d="M12 2.5L4.5 5.5v6c0 4.4 3.1 8.4 7.5 10 4.4-1.6 7.5-5.6 7.5-10v-6L12 2.5z"/><path d="M12 4v16" stroke="var(--surface)" stroke-width="1.6"/>',
+  "cross.case.fill":'<rect x="2.5" y="7" width="19" height="12" rx="2"/><path d="M9 7V5.5A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5V7" fill="none" stroke-width="1.8"/><path d="M12 10v6M9 13h6" stroke="var(--surface)" stroke-width="2" stroke-linecap="round"/>',
+  "calendar":'<rect x="3" y="5" width="18" height="16" rx="2.5" fill="none" stroke-width="1.8"/><path d="M3 9.5h18M8 3v4M16 3v4" stroke-width="1.8" fill="none"/>',
+  "calendar.badge.clock":'<rect x="3" y="5" width="14" height="14" rx="2.5" fill="none" stroke-width="1.8"/><path d="M3 9.5h14M7 3v4M13 3v4" stroke-width="1.8" fill="none"/><circle cx="18" cy="17" r="4.2" fill="none" stroke-width="1.6"/><path d="M18 15v2.2l1.4.9" stroke-width="1.5" fill="none"/>',
+  "clock.arrow.circlepath":'<circle cx="12" cy="12" r="8.5" fill="none" stroke-width="1.8"/><path d="M12 7v5.2l3.4 2" stroke-width="1.8" fill="none"/>',
+  "list.bullet":'<path d="M8 6.5h13M8 12h13M8 17.5h13" stroke-width="1.9"/><circle cx="4" cy="6.5" r="1.4"/><circle cx="4" cy="12" r="1.4"/><circle cx="4" cy="17.5" r="1.4"/>',
+  "list.bullet.rectangle":'<rect x="3" y="4.5" width="18" height="15" rx="2.5" fill="none" stroke-width="1.7"/><path d="M9.5 9h8M9.5 12.5h8M9.5 16h5" stroke-width="1.6"/><circle cx="6.8" cy="9" r="1"/><circle cx="6.8" cy="12.5" r="1"/><circle cx="6.8" cy="16" r="1"/>',
+  "star.circle.fill":'<circle cx="12" cy="12" r="9"/><path d="M12 7l1.6 3.3 3.6.5-2.6 2.5.6 3.6-3.2-1.7-3.2 1.7.6-3.6-2.6-2.5 3.6-.5L12 7z" fill="var(--surface)"/>',
+  "star.fill":'<path d="M12 3l2.6 5.4 5.9.8-4.3 4.1 1 5.9-5.2-2.8-5.2 2.8 1-5.9L3.5 9.2l5.9-.8L12 3z"/>',
+  "person.fill":'<circle cx="12" cy="8" r="4"/><path d="M4 20.5c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5"/>',
+  "cart.fill":'<path d="M2.5 4h2.2l2.4 10.6h10l2.4-7.6H7" fill="none" stroke-width="1.9" stroke-linejoin="round"/><circle cx="9" cy="19" r="1.7"/><circle cx="17" cy="19" r="1.7"/>',
+  "bag.fill":'<path d="M4.5 8h15l-1 12.5h-13L4.5 8z"/><path d="M8.5 8V6a3.5 3.5 0 0 1 7 0v2" fill="none" stroke-width="1.8"/>',
+  "lock.fill":'<rect x="4.5" y="10" width="15" height="10.5" rx="2.5"/><path d="M8 10V7.5a4 4 0 0 1 8 0V10" fill="none" stroke-width="1.9"/>',
+  "plus.circle.fill":'<circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8" stroke="var(--surface)" stroke-width="2.2" stroke-linecap="round"/>',
+  "minus.circle.fill":'<circle cx="12" cy="12" r="9"/><path d="M8 12h8" stroke="var(--surface)" stroke-width="2.2" stroke-linecap="round"/>',
+  "chevron.right":'<path d="M9 5l7 7-7 7" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>',
+  "chevron.left":'<path d="M15 5l-7 7 7 7" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>',
+  "chevron.down":'<path d="M5 9l7 7 7-7" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>',
+  "pencil":'<path d="M4 20l1-4.5L16.2 4.3a2 2 0 0 1 2.8 0l.7.7a2 2 0 0 1 0 2.8L8.5 19 4 20z"/>',
+  "trash":'<path d="M4.5 6.5h15M9.5 6.5V4.5h5v2M6.5 6.5l1 13a1.5 1.5 0 0 0 1.5 1.4h6a1.5 1.5 0 0 0 1.5-1.4l1-13" fill="none" stroke-width="1.8" stroke-linecap="round"/>',
+  "info.circle":'<circle cx="12" cy="12" r="8.6" fill="none" stroke-width="1.8"/><path d="M12 11v6M12 7.4v.2" stroke-width="2" stroke-linecap="round"/>',
+  "function":'<path d="M6 20c0-8 0-14 3.5-14 1 0 1.8.4 2.3 1M5 11h7M13 10l6 8M19 10l-6 8" fill="none" stroke-width="1.8" stroke-linecap="round"/>',
+  "slider.horizontal.3":'<path d="M3 7h6M13 7h8M3 12h12M19 12h2M3 17h4M11 17h10" stroke-width="1.9" stroke-linecap="round"/><circle cx="11" cy="7" r="2"/><circle cx="17" cy="12" r="2"/><circle cx="9" cy="17" r="2"/>',
+  "dial.medium":'<circle cx="12" cy="12" r="8.6" fill="none" stroke-width="1.8"/><path d="M12 12l4-3" stroke-width="1.9" stroke-linecap="round"/>',
+  "bell.badge.fill":'<path d="M6 17V11a6 6 0 1 1 12 0v6l1.5 2h-15L6 17z"/><path d="M10 20a2 2 0 0 0 4 0" fill="none" stroke-width="1.8"/><circle cx="18.5" cy="5.5" r="3"/>',
+  "flame.fill":'<path d="M12 2.5s1 3.5-1.5 6S7 13 7 15a5 5 0 0 0 10 0c0-3-2-4.5-2-4.5s-.5 2-2 2c0 0 1-3.5-1-10z"/>',
+  "square.stack.3d.up.fill":'<path d="M12 2.5L2.5 7 12 11.5 21.5 7 12 2.5z"/><path d="M2.5 12L12 16.5 21.5 12" fill="none" stroke-width="1.8"/><path d="M2.5 16.5L12 21l9.5-4.5" fill="none" stroke-width="1.8"/>',
+  "chart.line.uptrend.xyaxis":'<path d="M3 3v18h18" fill="none" stroke-width="1.8" stroke-linecap="round"/><path d="M6.5 15.5l4-4.5 3 2.5 5-6.5" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M14.5 6.5h4.5V11" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>',
+  "chart.line.downtrend.xyaxis":'<path d="M3 3v18h18" fill="none" stroke-width="1.8" stroke-linecap="round"/><path d="M6.5 7l4 4.5 3-2.5 5 6.5" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>',
+  "chart.xyaxis.line":'<path d="M3 3v18h18" fill="none" stroke-width="1.8" stroke-linecap="round"/><path d="M6.5 15l4-5 3 3 5-6" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>',
+  "chart.bar.fill":'<rect x="3.5" y="12" width="4" height="8" rx="1"/><rect x="10" y="7" width="4" height="13" rx="1"/><rect x="16.5" y="3.5" width="4" height="16.5" rx="1"/>',
+  "sunset.fill":'<path d="M2.5 18h19M6 18a6 6 0 0 1 12 0M12 2.5v3M4.5 8.5l2 1.5M19.5 8.5l-2 1.5M2 21.5h20" fill="none" stroke-width="1.8" stroke-linecap="round"/>',
+  "wand.and.stars":'<path d="M4 20L15 9M17 7l3-3" stroke-width="2" stroke-linecap="round"/><path d="M18.5 4.5l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7.7-1.8zM7 3l.5 1.3L8.8 4.8 7.5 5.3 7 6.6 6.5 5.3 5.2 4.8 6.5 4.3 7 3z"/>',
+  "gearshape":'<circle cx="12" cy="12" r="3.2" fill="none" stroke-width="1.9"/><path d="M12 2.5l1.4 2.2 2.6-.5.6 2.6 2.4 1.1-1 2.4 1.6 2.1-2 1.8.3 2.6-2.6.4-1.4 2.3L12 18.4l-1.9 1.2-1.4-2.3-2.6-.4.3-2.6-2-1.8 1.6-2.1-1-2.4 2.4-1.1.6-2.6 2.6.5L12 2.5z" fill="none" stroke-width="1.5"/>',
+  "eye.slash":'<path d="M3 12s3.5-6 9-6 9 6 9 6-3.5 6-9 6-9-6-9-6z" fill="none" stroke-width="1.8"/><circle cx="12" cy="12" r="2.6" fill="none" stroke-width="1.8"/><path d="M4 4l16 16" stroke-width="2" stroke-linecap="round"/>',
+  "eye":'<path d="M3 12s3.5-6 9-6 9 6 9 6-3.5 6-9 6-9-6-9-6z" fill="none" stroke-width="1.8"/><circle cx="12" cy="12" r="2.6" fill="none" stroke-width="1.8"/>',
+  "ellipsis.circle":'<circle cx="12" cy="12" r="8.6" fill="none" stroke-width="1.8"/><circle cx="8" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="16" cy="12" r="1.3"/>',
+  "arrow.up.arrow.down":'<path d="M7 20V5M4 8l3-3 3 3M17 4v15M14 16l3 3 3-3" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>',
+  "arrow.counterclockwise":'<path d="M4 10a8 8 0 1 1 1.2 6" fill="none" stroke-width="1.9" stroke-linecap="round"/><path d="M3 4.5V10h5.5" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>',
+  "arrow.triangle.2.circlepath":'<path d="M4 10a8 8 0 0 1 13-3M20 14a8 8 0 0 1-13 3" fill="none" stroke-width="1.9" stroke-linecap="round"/><path d="M17 3v4.5h-4.5M7 21v-4.5h4.5" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>',
+  "wallet.bifold.fill":'<rect x="2.5" y="5" width="19" height="14" rx="2.5"/><path d="M12 5v14" stroke="var(--surface)" stroke-width="1.6"/><circle cx="17" cy="12" r="1.4" fill="var(--surface)"/>',
+  "heart.text.square.fill":'<rect x="3" y="3" width="18" height="18" rx="4"/><path d="M12 17s-4-2.6-4-5.2A2.2 2.2 0 0 1 12 10a2.2 2.2 0 0 1 4 1.8c0 2.6-4 5.2-4 5.2z" fill="var(--surface)"/>',
+  "fork.knife":'<path d="M6 3v7a2 2 0 0 0 4 0V3M8 10v11M16 3c-1.5 1-2 3-2 5s.5 3 2 3v10" fill="none" stroke-width="1.8" stroke-linecap="round"/>',
+  "fuelpump.fill":'<path d="M4 21V5a2 2 0 0 1 2-2h5a2 2 0 0 1 2 2v16H4z"/><path d="M13 9h3a2 2 0 0 1 2 2v6a1.5 1.5 0 0 0 3 0V9l-2.5-2.5" fill="none" stroke-width="1.7" stroke-linecap="round"/>',
+  "laptopcomputer":'<rect x="4" y="5" width="16" height="11" rx="1.8" fill="none" stroke-width="1.8"/><path d="M2 19h20" stroke-width="2" stroke-linecap="round"/>',
+  "tv.fill":'<rect x="2.5" y="5" width="19" height="12.5" rx="2"/><path d="M8 21h8M12 17.5V21" fill="none" stroke-width="1.8" stroke-linecap="round"/>',
+  "wifi":'<path d="M2.5 9a14 14 0 0 1 19 0M5.8 12.6a9.2 9.2 0 0 1 12.4 0M9.2 16a4.4 4.4 0 0 1 5.6 0" fill="none" stroke-width="1.9" stroke-linecap="round"/><circle cx="12" cy="19.4" r="1.5"/>',
+  "link":'<path d="M9.5 14.5l5-5M8 11L5.5 13.5a3.5 3.5 0 0 0 5 5L13 16M16 13l2.5-2.5a3.5 3.5 0 0 0-5-5L11 8" fill="none" stroke-width="1.9" stroke-linecap="round"/>',
+  "play.circle":'<circle cx="12" cy="12" r="8.6" fill="none" stroke-width="1.8"/><path d="M10 8.5l6 3.5-6 3.5v-7z"/>',
+  "pause.circle":'<circle cx="12" cy="12" r="8.6" fill="none" stroke-width="1.8"/><path d="M10 9v6M14 9v6" stroke-width="2" stroke-linecap="round"/>',
+  "square.and.arrow.up":'<path d="M12 3v12M8.5 6.5L12 3l3.5 3.5" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 12v7.5a1.5 1.5 0 0 0 1.5 1.5h11a1.5 1.5 0 0 0 1.5-1.5V12" fill="none" stroke-width="1.9" stroke-linecap="round"/>'
+};
+function icon(name, size, color){
+  const body = ICON[name] || ICON["target"];
+  const s = size ? `width="${size}" height="${size}"` : "";
+  const c = color ? `color:${color};` : "";
+  return `<svg viewBox="0 0 24 24" ${s} fill="currentColor" stroke="currentColor" stroke-width="0" style="${c}">${body}</svg>`;
+}
+
+/* ---------------- formatting ---------------- */
+let PRIVACY = false;
+function fmt(v){
+  if (PRIVACY) return "₹ ✱✱✱";
+  if (!isFinite(v)) v = 0;
+  const a = Math.abs(v);
+  if (a >= 1e7) return "₹" + (v/1e7).toFixed(2) + "Cr";
+  if (a >= 1e5) return "₹" + (v/1e5).toFixed(1) + "L";
+  return "₹" + Math.round(v).toLocaleString("en-IN");
+}
+function fmtAxis(v){
+  if (PRIVACY) return "✱";
+  const a = Math.abs(v);
+  if (a >= 1e7) return (v/1e7).toFixed(1)+"Cr";
+  if (a >= 1e5) return Math.round(v/1e5)+"L";
+  return String(Math.round(v));
+}
+const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const MONTHS_LONG = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+function monthName(idx){
+  if (idx === null || idx === undefined) return "—";
+  return MONTHS[idx % 12] + " " + Math.floor(idx / 12);
+}
+function shortMonth(idx){ return MONTHS[idx % 12]; }
+function pct(v, d){ return (v||0).toFixed(d === undefined ? 0 : d) + "%"; }
+function esc(s){ return String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+function uid(){ return "id-" + Math.random().toString(36).slice(2, 10) + Date.now().toString(36); }
+function nowIdx(){ const d = new Date(); return d.getFullYear()*12 + d.getMonth(); }
+
+/* ---------------- models & defaults ---------------- */
+function defaultConfig(){
+  return {
+    income:255000, hikeAnnual:8, hikeSwitch:20, bonus:200000,
+    rentExp:25000, livingExp:125000, wifeExp:30000, chennaiRent:30000, expInflation:6,
+    epfBal:1529000, epfMonthly:27230, epfRate:8.25,
+    npsBal:343000, npsMonthly:15884, npsRate:10,
+    usReturn:18, inReturn:12, usAlloc:60, liquidRet:6,
+    plRate:12, plEMI:19000,
+    chBal:2600000, chRate:8.5, chEMI:36000, chPrepay:0,
+    agBal:15000000, agRate:9, agEMI:110000, agPrepay:90000, agShare:40, agMaint:10,
+    commonFund:3000000, commonFundYear:2030,
+    goals: defaultGoals(), recurring: defaultRecurring(),
+    swr:4, retireYear:2035, efMonths:3, efSplit:50,
+    extraSavings:0, driftAlert:10000, postRetReturn:9
+  };
+}
+function defaultActuals(){
+  return {
+    plOutstanding:800000, usValue:4500, inValue:7000, fdSavings:2500,
+    epf:1529000, nps:343000,
+    chennaiProperty:9500000, agartalaProperty:0, vehicle:150000,
+    healthPersonal:3000000, healthEmployer:800000,
+    termSelf:10000000, termSpouse:10000000,
+    lastUpdated:null
+  };
+}
+function newGoal(){
+  return { id:uid(), name:"New goal", symbol:"target", target:1000000, targetYear:2030,
+    monthly:10000, stepUpPct:0, bucket:"equity", actual:0, afterDebtFree:true,
+    downPct:100, loanRate:9, loanYears:5, enabled:true };
+}
+function defaultGoals(){
+  return [
+    { id:uid(), name:"Car", symbol:"car.fill", target:1500000, targetYear:2028, monthly:85000,
+      stepUpPct:0, bucket:"liquid", actual:0, afterDebtFree:true, downPct:40, loanRate:9, loanYears:5, enabled:true },
+    { id:uid(), name:"Daughter's education", symbol:"graduationcap.fill", target:20000000, targetYear:2040,
+      monthly:50000, stepUpPct:8, bucket:"equity", actual:0, afterDebtFree:true, downPct:100,
+      loanRate:9, loanYears:5, enabled:true }
+  ];
+}
+function newRecurring(){
+  return { id:uid(), name:"New payment", symbol:"calendar", amount:10000, frequency:"yearly",
+    anchorMonth:4, anchorYear:2026, inflate:true, enabled:true };
+}
+function defaultRecurring(){
+  return [
+    { id:uid(), name:"Health insurance (family floater)", symbol:"cross.case.fill", amount:40000, frequency:"yearly", anchorMonth:4, anchorYear:2026, inflate:true, enabled:true },
+    { id:uid(), name:"Term insurance — you", symbol:"shield.lefthalf.filled", amount:15000, frequency:"yearly", anchorMonth:7, anchorYear:2026, inflate:true, enabled:true },
+    { id:uid(), name:"Term insurance — wife", symbol:"shield.lefthalf.filled", amount:12000, frequency:"yearly", anchorMonth:9, anchorYear:2026, inflate:true, enabled:true },
+    { id:uid(), name:"Daughter's school fees", symbol:"graduationcap.fill", amount:30000, frequency:"quarterly", anchorMonth:4, anchorYear:2026, inflate:true, enabled:true },
+    { id:uid(), name:"Car insurance", symbol:"car.fill", amount:12000, frequency:"yearly", anchorMonth:11, anchorYear:2026, inflate:true, enabled:true }
+  ];
+}
+function defaultCards(){
+  return [
+    { id:uid(), name:"Amex Platinum Travel", emoji:"🟢",
+      baseReward:"1 MR/₹50 base — weak. The spend milestones ARE the card.",
+      strategy:"PRIORITY: route the next ₹7,089 of ordinary spend here, then stop. 10,000 MR ≈ ₹4,500–5,000 on ₹7k spend is a ~65% return — the best deal in your wallet. After that, check whether the ₹4L annual tier is reachable before 22 Dec.",
+      due:0, points:20666, pointValue:0.47,
+      milestones:[
+        { id:uid(), title:"Next milestone — ₹7,089 to go", target:7089, progress:0, period:"yearly", reward:"10,000 MR points", deadline:"22 Dec 2026", valueINR:4700 },
+        { id:uid(), title:"₹4L annual tier (verify)", target:400000, progress:0, period:"yearly", reward:"25,000 MR + Taj voucher", deadline:"22 Dec 2026", valueINR:22000 }
+      ]},
+    { id:uid(), name:"HDFC Diners Black Metal", emoji:"⬛",
+      baseReward:"5 RP/₹150 ≈ 3.3% · SmartBuy 10X up to ~33%",
+      strategy:"Home base for general spend. This quarter, gap spend earns ~6–9% (base + milestone), so online shopping and Flipkart should route here instead of their own cards. Swiggy food still stays on the Swiggy card at 10%. Note: HDFC excludes rent, fuel, wallet loads and EMIs from rewards — those likely don't count toward the milestone either.",
+      due:0, points:38952, pointValue:1.0,
+      milestones:[
+        { id:uid(), title:"Quarterly spend → bonus points", target:400000, progress:0, period:"quarterly", reward:"10,000 RP", deadline:"30 Sep 2026", valueINR:10000 },
+        { id:uid(), title:"Annual spend → fee waiver", target:500000, progress:0, period:"yearly", reward:"₹10k fee waived", deadline:"", valueINR:10000 }
+      ]},
+    { id:uid(), name:"HDFC Swiggy", emoji:"🟠",
+      baseReward:"10% Swiggy (cap ₹1.5k/mo) · 5% online (cap ₹1.5k/mo) · 1% offline",
+      strategy:"Swiggy and Instamart only while the Diners quarterly milestone is live — 10% still beats Diners' ~9% marginal rate, but the 5% online tier does not. Revisit after 30 Sep.",
+      due:0, points:0, pointValue:1.0,
+      milestones:[
+        { id:uid(), title:"Swiggy 10% cap this month", target:15000, progress:0, period:"monthly", reward:"₹1,500 max cashback", deadline:"", valueINR:1500 },
+        { id:uid(), title:"Annual spend → fee waiver", target:200000, progress:0, period:"yearly", reward:"₹500 fee waived", deadline:"", valueINR:500 }
+      ]},
+    { id:uid(), name:"Axis Flipkart", emoji:"🔵",
+      baseReward:"5% Flipkart · 4% Cleartrip/partners · 1% others",
+      strategy:"Parked this quarter — even Flipkart's 5% loses to Diners' ~6–9% marginal rate while the ₹4L milestone is in play. 1% elsewhere is your worst rate; never default here.",
+      due:0, points:0, pointValue:1.0,
+      milestones:[
+        { id:uid(), title:"Annual spend → fee waiver", target:350000, progress:0, period:"yearly", reward:"₹500 fee waived", deadline:"", valueINR:500 }
+      ]}
+  ];
+}
+
+const FREQ = {
+  monthly:   { label:"Monthly",     interval:1  },
+  quarterly: { label:"Quarterly",   interval:3  },
+  halfYearly:{ label:"Half-yearly", interval:6  },
+  yearly:    { label:"Yearly",      interval:12 }
+};
+const perYear = rp => rp.amount * (12 / FREQ[rp.frequency].interval);
+const perMonthAvg = rp => perYear(rp) / 12;
+const anchorIdx = rp => Math.round(rp.anchorYear) * 12 + Math.round(rp.anchorMonth) - 1;
+function isDue(rp, idx){
+  if (!rp.enabled || idx < anchorIdx(rp)) return false;
+  return (idx - anchorIdx(rp)) % FREQ[rp.frequency].interval === 0;
+}
+function dueAmount(rp, idx, inflation){
+  if (!isDue(rp, idx)) return 0;
+  if (!rp.inflate) return rp.amount;
+  const years = Math.floor(idx/12) - rp.anchorYear;
+  return years > 0 ? rp.amount * Math.pow(1 + inflation/100, years) : rp.amount;
+}
+const fundedTarget = g => g.target * Math.min(100, Math.max(1, g.downPct)) / 100;
+const financed = g => g.target - fundedTarget(g);
+
+/* ---------------- store ---------------- */
+const KEY = "wealthpilot.v1";
+const STORE = { config:defaultConfig(), actuals:defaultActuals(), history:[], cards:defaultCards(), privacy:false, theme:"system" };
+function load(){
+  try{
+    const raw = localStorage.getItem(KEY);
+    if (!raw) return;
+    const b = JSON.parse(raw);
+    if (b.config)  STORE.config  = Object.assign(defaultConfig(),  b.config);
+    if (b.actuals) STORE.actuals = Object.assign(defaultActuals(), b.actuals);
+    STORE.history = b.history || [];
+    STORE.cards   = b.cards && b.cards.length ? b.cards : defaultCards();
+    STORE.privacy = !!b.privacy;
+    STORE.theme   = b.theme || "system";
+  }catch(e){ console.warn("load failed", e); }
+}
+function save(){
+  try{ localStorage.setItem(KEY, JSON.stringify(STORE)); }
+  catch(e){ console.warn("save failed", e); }
+}
+function pointsValue(){ return STORE.cards.reduce((t,c)=> t + (c.points||0)*(c.pointValue||0), 0); }
+function checkInStreak(){
+  const h = [...STORE.history].sort((a,b)=> new Date(b.date) - new Date(a.date));
+  if (!h.length) return 0;
+  const mi = d => { const x = new Date(d); return x.getFullYear()*12 + x.getMonth(); };
+  let streak = 1;
+  for (let i=1;i<h.length;i++){ if (mi(h[i].date) === mi(h[0].date) - i) streak++; else break; }
+  return streak;
+}
+function snapLiquid(s){ return s.us + s.ind + s.carFund + s.fdSavings; }
+function snapDrift(s){ return snapLiquid(s) - s.planned; }
+function onPlanStreak(){
+  let n = 0;
+  for (const s of [...STORE.history].sort((a,b)=> new Date(b.date)-new Date(a.date))){
+    if (snapDrift(s) >= 0) n++; else break;
+  }
+  return n;
+}
+function addSnapshot(s){
+  const mi = d => { const x = new Date(d); return x.getFullYear()*12 + x.getMonth(); };
+  STORE.history = STORE.history.filter(x => mi(x.date) !== mi(s.date));
+  STORE.history.push(s);
+  STORE.history.sort((a,b)=> new Date(a.date) - new Date(b.date));
+}
+
+/* ---------------- net worth ---------------- */
+function netWorthOf(a, c, cards){
+  const liquidGoalSavings = c.goals.filter(g => g.enabled && g.bucket === "liquid")
+                                   .reduce((t,g)=> t + (g.actual||0), 0);
+  const n = {
+    us:a.usValue, ind:a.inValue, emergency:a.fdSavings, goalSavings:liquidGoalSavings,
+    epf:a.epf, nps:a.nps,
+    chennai:a.chennaiProperty, agartala:a.agartalaProperty, vehicle:a.vehicle,
+    personalLoan:a.plOutstanding, chennaiLoan:c.chBal,
+    cardDues:(cards||[]).reduce((t,x)=> t + (x.due||0), 0)
+  };
+  n.liquid = n.us + n.ind + n.emergency + n.goalSavings;
+  n.locked = n.epf + n.nps;
+  n.hard = n.chennai + n.agartala + n.vehicle;
+  n.assets = n.liquid + n.locked + n.hard;
+  n.liabilities = n.personalLoan + n.chennaiLoan + n.cardDues;
+  n.net = n.assets - n.liabilities;
+  n.stocks = n.us + n.ind;
+  n.stocksPct = n.net > 0 ? n.stocks / n.net * 100 : 0;
+  return n;
+}
+
+/* ---------------- the engine ----------------
+   Month index = year*12 + month(0-based). Plan runs Aug 2026 → Jul 2040.
+   This is a line-for-line port of Engine.swift.
+----------------------------------------------- */
+const START_IDX = 2026*12 + 7;
+const END_IDX   = 2040*12 + 6;
+const mr = annual => Math.pow(1 + annual/100, 1/12) - 1;
+
+function agRent(year, month){
+  if (year < 2027 || (year === 2027 && month < 5)) return 120000;
+  if (year === 2027) return 250000;
+  return 350000 * Math.pow(1.15, Math.floor((year - 2028) / 3));
+}
+const isSwitchYear = y => y > 2027 && (y - 2026) % 3 === 0;
+
+function actualsOverride(a, goals){
+  const ga = {};
+  goals.forEach(g => ga[g.id] = g.actual || 0);
+  return { atIdx: Math.max(START_IDX, nowIdx()), pl:a.plOutstanding, ef:a.fdSavings,
+           us:a.usValue, ind:a.inValue, epf:a.epf, nps:a.nps, goalActuals:ga };
+}
+
+function simulate(c, seedUS, seedIN, override){
+  const r = { states:[], plDone:null, chDone:null, agDone:null, efDone:null,
+              intPL:0, intCH:0, intAG:0, goalFunded:{}, goalLoanClosed:{},
+              goalLoanEMI:{}, goalLoanInterest:{}, need:0, expThen:0,
+              rentalIncome:0, retAssets:0, atRetire:null };
+  const goals = c.goals.filter(g => g.enabled);
+
+  const blendAnnual = (c.usAlloc*c.usReturn + (100-c.usAlloc)*c.inReturn) / 100;
+  const eqBlend = mr(blendAnnual);
+  const usR = mr(c.usReturn), inR = mr(c.inReturn), lqR = mr(c.liquidRet);
+  const epfR = mr(c.epfRate), npsR = mr(c.npsRate);
+
+  let th = c.income, exp = c.rentExp + c.livingExp;
+  let wife = c.wifeExp, chRent = c.chennaiRent;
+  let pl = 800000, ch = c.chBal, ag = c.agBal;
+  let ef = 0, ret = 0;
+  let epf = c.epfBal, nps = c.npsBal;
+  let usV = seedUS, inV = seedIN;
+  const goalVal = {}, goalLoan = {}, goalEMI = {};
+  goals.forEach(g => { goalVal[g.id] = 0; goalLoan[g.id] = 0; goalEMI[g.id] = 0; });
+  const cfYear = Math.round(c.commonFundYear);
+
+  for (let idx = START_IDX; idx <= END_IDX; idx++){
+    const yr = Math.floor(idx/12), mo = idx % 12;
+    if (mo === 0){
+      th *= yr === 2027 ? 1.10 : (isSwitchYear(yr) ? 1 + c.hikeSwitch/100 : 1 + c.hikeAnnual/100);
+      exp *= 1 + c.expInflation/100;
+      wife *= 1 + c.expInflation/100;
+      chRent *= 1 + c.expInflation/100;
+    }
+    const g = th / c.income;
+
+    // Re-base on real balances at "now" when an override is supplied.
+    if (override && idx === override.atIdx){
+      pl = Math.max(0, override.pl); ef = override.ef;
+      epf = override.epf; nps = override.nps;
+      usV = override.us; inV = override.ind;
+      const equity = override.us + override.ind;
+      let eqGoalNotional = 0;
+      goals.filter(x => x.bucket === "equity").forEach(x => eqGoalNotional += goalVal[x.id] || 0);
+      const pool = eqGoalNotional + ret;
+      if (pool > 0){
+        const f = equity / pool;
+        goals.filter(x => x.bucket === "equity").forEach(x => goalVal[x.id] = (goalVal[x.id]||0) * f);
+        ret *= f;
+      } else { ret = equity; }
+      goals.forEach(gg => {
+        if (gg.bucket === "liquid" && override.goalActuals[gg.id] !== undefined)
+          goalVal[gg.id] = override.goalActuals[gg.id];
+        if ((goalVal[gg.id]||0) >= fundedTarget(gg) && r.goalFunded[gg.id] === undefined)
+          r.goalFunded[gg.id] = idx;
+      });
+      if (pl <= 0 && r.plDone === null) r.plDone = idx;
+    }
+
+    // --- loans ---
+    if (ch > 0){
+      const i = ch * c.chRate / 1200; r.intCH += i;
+      ch += i - c.chEMI - c.chPrepay;
+      if (ch <= 0){ ch = 0; r.chDone = idx; }
+    }
+    if (ag > 0){
+      const i = ag * c.agRate / 1200; r.intAG += i;
+      ag += i - c.agEMI - c.agPrepay;
+      if (ag <= 0){ ag = 0; r.agDone = idx; }
+    }
+    let goalLoanEMIsDue = 0;
+    for (const gg of goals){
+      const bal = goalLoan[gg.id] || 0;
+      if (bal <= 0) continue;
+      const emi = goalEMI[gg.id] || 0;
+      const i = bal * gg.loanRate / 1200;
+      r.goalLoanInterest[gg.id] = (r.goalLoanInterest[gg.id] || 0) + i;
+      const nb = bal + i - emi;
+      goalLoanEMIsDue += emi;
+      if (nb <= 0){
+        goalLoan[gg.id] = 0; goalEMI[gg.id] = 0;
+        if (r.goalLoanClosed[gg.id] === undefined) r.goalLoanClosed[gg.id] = idx;
+      } else { goalLoan[gg.id] = nb; }
+    }
+
+    // --- income and surplus ---
+    const famNet = agRent(yr, mo) * (1 - c.agMaint/100) - (ag > 0 ? c.agEMI : 0);
+    const agInc = Math.max(0, famNet * c.agShare / 100);
+
+    let recurringDue = 0;
+    for (const rp of c.recurring) if (rp.enabled) recurringDue += dueAmount(rp, idx, c.expInflation);
+
+    let surplus = th - exp + agInc + (chRent - wife) + c.extraSavings;
+    if (ch > 0) surplus -= c.chEMI + c.chPrepay;
+    if (pl > 0) surplus -= c.plEMI;
+    surplus -= goalLoanEMIsDue;
+    surplus -= recurringDue;
+
+    let lump = 0;
+    if (mo === 0 && yr >= 2027) lump += c.bonus * g;
+    if (mo === 0 && yr === cfYear) ret += c.commonFund;
+
+    const s = { idx, year:yr, month:mo, th:0, exp:0, wifeExp:0, chRent:0,
+                pl:0, ch:0, ag:0, ef:0, efTarget:0, recurring:0,
+                ret:0, epf:0, nps:0, usV:0, inV:0,
+                goalVal:{}, goalContrib:{}, goalLoan:{},
+                actEF:0, actPL:0, actRet:0, surplus:0, agInc:0 };
+
+    // --- phase 0: emergency fund ---
+    const recurringMonthlyAvg = c.recurring.filter(x=>x.enabled).reduce((t,x)=> t + perMonthAvg(x), 0);
+    const efTarget = c.efMonths * Math.max(0, exp + wife - agInc - chRent
+      + (pl > 0 ? c.plEMI : 0)
+      + (ch > 0 ? c.chEMI + c.chPrepay : 0)
+      + goalLoanEMIsDue + recurringMonthlyAvg);
+    ef *= 1 + lqR;
+    let efC = 0;
+    if (ef < efTarget){
+      const fromLump = Math.min(lump, efTarget - ef);
+      ef += fromLump; lump -= fromLump; efC += fromLump;
+      const fromSurplus = Math.min(Math.max(0, efTarget - ef), Math.max(0, surplus) * c.efSplit / 100);
+      ef += fromSurplus; surplus -= fromSurplus; efC += fromSurplus;
+    }
+    s.actEF = efC; s.efTarget = efTarget;
+    if (r.efDone === null && ef >= efTarget && efTarget > 0) r.efDone = idx;
+
+    // funds one goal from the running surplus / January lump
+    const fund = (gg) => {
+      let v = (goalVal[gg.id] || 0) * (1 + (gg.bucket === "liquid" ? lqR : eqBlend));
+      const alreadyFunded = v >= fundedTarget(gg);
+      let contrib = 0;
+      if (!alreadyFunded){
+        const steps = Math.max(0, yr - 2029);
+        const planned = gg.monthly * Math.pow(1 + gg.stepUpPct/100, steps);
+        contrib = Math.min(planned, Math.max(0, surplus));
+        surplus -= contrib;
+        if (contrib < planned && lump > 0){
+          const extra = Math.min(planned - contrib, lump);
+          contrib += extra; lump -= extra;
+        }
+        v += contrib;
+      }
+      goalVal[gg.id] = v;
+      s.goalContrib[gg.id] = contrib;
+
+      if (!alreadyFunded && v >= fundedTarget(gg)){
+        if (r.goalFunded[gg.id] === undefined) r.goalFunded[gg.id] = idx;
+        const fin = financed(gg);
+        if (fin > 0 && (goalLoan[gg.id] || 0) <= 0 && gg.loanYears > 0){
+          const rm = gg.loanRate / 1200;
+          const n = gg.loanYears * 12;
+          const emi = rm > 0 ? fin * rm * Math.pow(1+rm, n) / (Math.pow(1+rm, n) - 1) : fin / n;
+          goalLoan[gg.id] = fin; goalEMI[gg.id] = emi; r.goalLoanEMI[gg.id] = emi;
+        }
+      }
+    };
+
+    // --- phase 1: goals that don't wait for the loan ---
+    for (const gg of goals) if (!gg.afterDebtFree) fund(gg);
+
+    // --- phase 2: blitz the personal loan ---
+    if (pl > 0){
+      const i = pl * c.plRate / 1200; r.intPL += i;
+      const pay = Math.max(0, surplus) + lump;
+      pl += i - c.plEMI - pay;
+      s.actPL = pay;
+      surplus = 0; lump = 0;
+      if (pl <= 0){ pl = 0; r.plDone = idx; }
+    }
+    const debtFree = pl <= 0;
+
+    // --- phase 3: remaining goals, in priority order ---
+    for (const gg of goals){
+      if (!gg.afterDebtFree) continue;
+      if (debtFree) fund(gg); else s.goalContrib[gg.id] = 0;
+    }
+
+    // --- phase 4: retirement absorbs the remainder ---
+    const retC = Math.max(0, surplus) + lump;
+    ret = ret * (1 + eqBlend) + retC;
+    s.actRet = retC;
+    surplus = 0; lump = 0;
+
+    // --- portfolio split & retirement accounts ---
+    let equityContrib = retC;
+    for (const gg of goals) if (gg.bucket === "equity") equityContrib += s.goalContrib[gg.id] || 0;
+    if (mo === 0 && yr === cfYear) equityContrib += c.commonFund;
+    usV = usV * (1 + usR) + equityContrib * c.usAlloc / 100;
+    inV = inV * (1 + inR) + equityContrib * (100 - c.usAlloc) / 100;
+
+    epf = epf * (1 + epfR) + c.epfMonthly * g;
+    nps = nps * (1 + npsR) + c.npsMonthly * g;
+
+    s.th = th; s.exp = exp; s.wifeExp = wife; s.chRent = chRent;
+    s.pl = Math.max(0, pl); s.ch = Math.max(0, ch); s.ag = Math.max(0, ag);
+    s.ef = ef; s.ret = ret; s.recurring = recurringDue;
+    s.epf = epf; s.nps = nps; s.usV = usV; s.inV = inV;
+    s.goalVal = Object.assign({}, goalVal);
+    s.goalLoan = Object.assign({}, goalLoan);
+    s.goalContribTotal = Object.values(s.goalContrib).reduce((a,b)=>a+b, 0);
+    s.goalsTotal = Object.values(s.goalVal).reduce((a,b)=>a+b, 0);
+    s.surplus = efC + s.actPL + s.goalContribTotal + retC;
+    s.agInc = agInc;
+    r.states.push(s);
+  }
+
+  // --- retirement maths ---
+  const retireYear = Math.round(c.retireYear);
+  const yrsTo = retireYear - 2026;
+  r.expThen = (c.rentExp + c.livingExp) * Math.pow(1 + c.expInflation/100, yrsTo);
+  const atR = r.states.find(s => s.year === retireYear && s.month === 5) || r.states[r.states.length-1];
+  r.atRetire = atR;
+  const agOpen = atR.ag > 0;
+  const rentThen = agRent(retireYear+1, 0) * (1 - c.agMaint/100) - (agOpen ? c.agEMI : 0);
+  r.rentalIncome = Math.max(0, rentThen * c.agShare / 100);
+  r.need = Math.max(0, r.expThen - r.rentalIncome) * 12 / (c.swr / 100);
+  r.retAssets = atR.ret + atR.epf + atR.nps;
+
+  r.planNow = () => { const i = nowIdx(); let out = null; for (const s of r.states) if (s.idx <= i) out = s; return out; };
+  r.yearly = r.states.filter(s => s.month === 5 || s.month === 11);
+  r.finalValue = id => { const l = r.states[r.states.length-1]; return (l && l.goalVal[id]) || 0; };
+  return r;
+}
+
+/* ---------------- derived helpers ---------------- */
+function driftBreakdown(plan, c, a){
+  const d = { planEF:0, planGoals:0, planRet:0, commonFundAdj:0,
+              actUS:0, actIN:0, actEF:0, actGoalsLiquid:0,
+              loanPlanned:0, loanActual:0, goalRows:[] };
+  if (!plan) { d.planned = 0; d.actual = 0; d.drift = 0; d.loanDrift = 0; return d; }
+  d.planEF = plan.ef; d.planRet = plan.ret;
+  for (const g of c.goals){
+    if (!g.enabled) continue;
+    const planned = plan.goalVal[g.id] || 0;
+    d.planGoals += planned;
+    if (g.bucket === "liquid") d.actGoalsLiquid += g.actual || 0;
+    d.goalRows.push({ id:g.id, name:g.name, planned, actual:g.actual||0 });
+  }
+  d.commonFundAdj = new Date().getFullYear() >= Math.round(c.commonFundYear) ? c.commonFund : 0;
+  d.actUS = a.usValue; d.actIN = a.inValue; d.actEF = a.fdSavings;
+  d.loanPlanned = plan.pl; d.loanActual = a.plOutstanding;
+  d.planned = Math.max(0, d.planEF + d.planGoals + d.planRet - d.commonFundAdj);
+  d.actual = d.actUS + d.actIN + d.actEF + d.actGoalsLiquid;
+  d.drift = d.actual - d.planned;
+  d.loanDrift = d.loanActual - d.loanPlanned;
+  return d;
+}
+
+function goalImpacts(p, real, c){
+  const dateRow = (id, name, symbol, pi, ri) => {
+    const delta = (pi === null || pi === undefined || ri === null || ri === undefined) ? 0 : ri - pi;
+    const txt = delta === 0 ? ""
+      : (delta > 0 ? `${delta} month${delta === 1 ? "" : "s"} later`
+                   : `${-delta} month${delta === -1 ? "" : "s"} earlier`);
+    return { id, name, symbol, planText:monthName(pi), realText:monthName(ri), deltaText:txt, worse:delta > 0 };
+  };
+  const out = [
+    dateRow("ef", "Emergency fund", "lifepreserver.fill", p.efDone, real.efDone),
+    dateRow("pl", "Personal loan closed", "creditcard.fill", p.plDone, real.plDone)
+  ];
+  for (const g of c.goals){
+    if (!g.enabled) continue;
+    const pf = p.goalFunded[g.id], rf = real.goalFunded[g.id];
+    if (pf !== undefined && rf !== undefined){
+      out.push(dateRow(g.id, g.name, g.symbol, pf, rf));
+    } else {
+      const pv = p.finalValue(g.id), rv = real.finalValue(g.id);
+      const delta = rv - pv;
+      out.push({ id:g.id, name:g.name, symbol:g.symbol, planText:fmt(pv), realText:fmt(rv),
+                 deltaText: Math.abs(delta) < 1000 ? "" : (delta >= 0 ? "+" : "") + fmt(delta),
+                 worse: delta < 0 });
+    }
+  }
+  const pf = p.need > 0 ? p.retAssets / p.need * 100 : 100;
+  const rf = real.need > 0 ? real.retAssets / real.need * 100 : 100;
+  out.push({ id:"ret", name:`Retirement ${Math.round(c.retireYear)}`, symbol:"beach.umbrella.fill",
+             planText:`${Math.round(pf)}% funded`, realText:`${Math.round(rf)}% funded`,
+             deltaText: Math.abs(rf-pf) < 0.5 ? "" : (rf-pf >= 0 ? "+" : "") + (rf-pf).toFixed(0) + " pts",
+             worse: rf < pf });
+  return out;
+}
+
+function deviationSummary(drift, impacts){
+  const hurt = impacts.filter(i => i.worse && i.deltaText);
+  const helped = impacts.filter(i => !i.worse && i.deltaText);
+  if (drift < 0){
+    if (!hurt.length) return `You're ${fmt(-drift)} behind plan, but no goal date has moved yet. Catching up now keeps it that way.`;
+    const rest = hurt.length > 1 ? ` (and ${hurt.length-1} other goal${hurt.length === 2 ? "" : "s"})` : "";
+    return `You're ${fmt(-drift)} behind. ${hurt[0].name} slips ${hurt[0].deltaText}${rest}.`;
+  } else if (drift > 0){
+    if (!helped.length) return `You're ${fmt(drift)} ahead of plan. Keep going.`;
+    return `You're ${fmt(drift)} ahead. ${helped[0].name} moves ${helped[0].deltaText}.`;
+  }
+  return "You're exactly on plan.";
+}
+
+const incomeOf = m => m.th + m.agInc + m.chRent;
+function outgoOf(m, c, goalEMIs){
+  return m.exp + m.wifeExp + m.recurring
+    + (m.pl > 0 ? c.plEMI : 0)
+    + (m.ch > 0 ? c.chEMI + c.chPrepay : 0)
+    + (goalEMIs || 0);
+}
+function recurringDueItems(c, idx){
+  return c.recurring.filter(rp => rp.enabled && isDue(rp, idx))
+                    .map(rp => ({ item:rp, amount:dueAmount(rp, idx, c.expInflation) }));
+}
+function goalEMIsDue(m, c, sim){
+  let total = 0;
+  for (const g of c.goals){
+    if (!g.enabled) continue;
+    if ((m.goalLoan[g.id] || 0) > 0) total += sim.goalLoanEMI[g.id] || 0;
+  }
+  return total;
+}
+function actionText(plan, c){
+  if (!plan) return "Plan starts August 2026.";
+  const parts = [];
+  if (plan.actEF > 0) parts.push(`${fmt(plan.actEF)} → emergency fund`);
+  if (plan.actPL > 0) parts.push(`${fmt(plan.actPL)} extra → personal loan`);
+  let equityTotal = plan.actRet;
+  for (const g of c.goals){
+    if (!g.enabled) continue;
+    const contrib = plan.goalContrib[g.id] || 0;
+    if (contrib <= 0) continue;
+    if (g.bucket === "liquid") parts.push(`${fmt(contrib)} → ${g.name} (liquid)`);
+    else equityTotal += contrib;
+  }
+  if (equityTotal > 0){
+    const us = equityTotal * c.usAlloc / 100;
+    parts.push(`${fmt(us)} → US stocks, ${fmt(equityTotal - us)} → India stocks/MF`);
+  }
+  return parts.length ? parts.join(" · ") : "Nothing due this month.";
+}
+
+/* ---- one simulation per render, memoised on a serialised key ---- */
+let _simCache = { key:null, plan:null, real:null };
+function sims(){
+  const key = JSON.stringify([STORE.config, STORE.actuals]);
+  if (_simCache.key !== key){
+    const c = STORE.config, a = STORE.actuals;
+    _simCache = {
+      key,
+      plan: simulate(c, a.usValue, a.inValue),
+      real: simulate(c, a.usValue, a.inValue, actualsOverride(a, c.goals))
+    };
+  }
+  return _simCache;
+}
+/* =========================================================
+   UI PRIMITIVES
+   ========================================================= */
+let _h = {}, _hn = 0;
+function H(fn){ if (_hn > 6000){ _h = {}; _hn = 0; } const k = "h" + (_hn++); _h[k] = fn; return k; }
+function RUN(k){ const f = _h[k]; if (f) f(); }
+function RUNV(k, v){ const f = _h[k]; if (f) f(v); }
+window.RUN = RUN; window.RUNV = RUNV;
+
+const C = { income:"var(--income)", outgo:"var(--outgo)", wealth:"var(--wealth)",
+            goals:"var(--goals)", safety:"var(--safety)", danger:"var(--danger)",
+            t1:"var(--text)", t2:"var(--text2)", t3:"var(--text3)" };
+
+function card(inner, opts){
+  const o = opts || {};
+  const cls = "card" + (o.tight ? " tight" : "") + (o.onTap ? " tap" : "");
+  const tap = o.onTap ? ` onclick="RUN('${H(o.onTap)}')"` : "";
+  return `<div class="${cls}"${tap}>${inner}</div>`;
+}
+function sect(text, symbol, tint){
+  return `<div class="sect">${symbol ? `<span style="color:${tint||C.t2}">${icon(symbol)}</span>` : ""}${esc(text)}</div>`;
+}
+function row(label, value, o){
+  o = o || {};
+  const sym = o.symbol ? `<span style="color:${o.tint||C.t2};display:flex">${icon(o.symbol)}</span>` : "";
+  return `<div class="row">${sym}<span class="lbl${o.em?" em":""}">${esc(label)}</span><span class="sp"></span>`
+       + `<span class="val${o.em?" em":""}" style="color:${o.tint||C.t1}">${esc(value)}</span></div>`;
+}
+function tile(label, value, caption, symbol, tint){
+  return `<div class="tile"><div class="k" style="color:${tint}">${icon(symbol,11)}<span style="color:var(--text2)">${esc(label)}</span></div>`
+       + `<div class="v rnd" style="color:${tint}">${esc(value)}</div>`
+       + (caption ? `<div class="c">${esc(caption)}</div>` : "") + `</div>`;
+}
+function pill(text, tint){ return `<span class="pill" style="color:${tint};background:color-mix(in srgb, ${tint} 16%, transparent)">${esc(text)}</span>`; }
+function progress(p, tint){
+  const w = Math.max(3, Math.min(100, (p||0) * 100));
+  return `<div class="bar"><i style="width:${w}%;background:linear-gradient(90deg, ${tint}, color-mix(in srgb, ${tint} 65%, transparent))"></i></div>`;
+}
+function chev(){ return `<span class="chev">${icon("chevron.right")}</span>`; }
+function divider(){ return `<div class="divider"></div>`; }
+function note(t, dim){ return `<div class="note${dim?" t3":""}">${esc(t).replace(/\n/g,"<br>")}</div>`; }
+
+function splitBar(segs){ // [label, value, color, symbol]
+  const total = Math.max(1, segs.reduce((t,s)=> t + s[1], 0));
+  const bars = segs.map(s => `<i style="flex:${Math.max(0.02, s[1]/total)};background:${s[2]};border-radius:4px;display:block;height:12px"></i>`).join("");
+  const legend = segs.map(s => `<div class="row"><span style="color:${s[2]};display:flex">${icon(s[3])}</span>`
+    + `<span class="lbl" style="font-size:12.5px">${esc(s[0])}</span><span class="sp"></span>`
+    + `<span class="val">${esc(fmt(s[1]))}</span>`
+    + `<span style="width:36px;text-align:right;font-size:11px;font-weight:600;color:var(--text3)">${Math.round(s[1]/total*100)}%</span></div>`).join("");
+  return `<div style="display:flex;gap:3px">${bars}</div><div style="display:flex;flex-direction:column;gap:5px;margin-top:8px">${legend}</div>`;
+}
+
+/* ---- charts (hand-rolled SVG, no dependencies) ---- */
+function lineChart(series, opts){
+  const o = Object.assign({ height:150, rule:null, filled:false, legend:false }, opts||{});
+  const W = 320, H = o.height, L = 34, R = 6, T = 8, B = 16;
+  const all = series.flatMap(s => s.points);
+  if (!all.length) return `<div class="note t3">No data</div>`;
+  let xs = all.map(p=>p[0]), ys = all.map(p=>p[1]);
+  if (o.rule !== null && o.rule !== undefined && isFinite(o.rule)) ys = ys.concat([o.rule]);
+  let x0 = Math.min(...xs), x1 = Math.max(...xs);
+  let y0 = Math.min(0, Math.min(...ys)), y1 = Math.max(...ys);
+  if (x1 === x0) x1 = x0 + 1;
+  if (y1 === y0) y1 = y0 + 1;
+  y1 = y1 * 1.06;
+  const X = v => L + (v - x0) / (x1 - x0) * (W - L - R);
+  const Y = v => T + (1 - (v - y0) / (y1 - y0)) * (H - T - B);
+
+  let grid = "", labels = "";
+  for (let i=0;i<=3;i++){
+    const v = y0 + (y1-y0)*i/3, y = Y(v);
+    grid += `<line x1="${L}" y1="${y.toFixed(1)}" x2="${W-R}" y2="${y.toFixed(1)}" stroke="var(--line)" stroke-width="1"/>`;
+    labels += `<text x="${L-5}" y="${(y+3).toFixed(1)}" font-size="9" fill="var(--text3)" text-anchor="end">${fmtAxis(v)}</text>`;
+  }
+  let xlab = "";
+  for (let i=0;i<=3;i++){
+    const v = x0 + (x1-x0)*i/3;
+    xlab += `<text x="${X(v).toFixed(1)}" y="${H-3}" font-size="9" fill="var(--text3)" text-anchor="${i===0?"start":i===3?"end":"middle"}">${Math.floor(v/12)}</text>`;
+  }
+  let paths = "", defs = "";
+  series.forEach((s, si) => {
+    const pts = s.points.slice().sort((a,b)=>a[0]-b[0]);
+    if (!pts.length) return;
+    const d = pts.map((p,i)=> `${i?"L":"M"}${X(p[0]).toFixed(1)},${Y(p[1]).toFixed(1)}`).join(" ");
+    if (o.filled && si === 0){
+      const gid = "g"+Math.random().toString(36).slice(2,7);
+      defs += `<linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1">`
+           + `<stop offset="0%" stop-color="${s.color}" stop-opacity="0.30"/>`
+           + `<stop offset="100%" stop-color="${s.color}" stop-opacity="0.02"/></linearGradient>`;
+      paths += `<path d="${d} L${X(pts[pts.length-1][0]).toFixed(1)},${Y(y0).toFixed(1)} L${X(pts[0][0]).toFixed(1)},${Y(y0).toFixed(1)} Z" fill="url(#${gid})"/>`;
+    }
+    paths += `<path d="${d}" fill="none" stroke="${s.color}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"${s.dashed?' stroke-dasharray="5 4" stroke-width="1.6"':""}/>`;
+  });
+  let ruleEl = "";
+  if (o.rule !== null && o.rule !== undefined && isFinite(o.rule)){
+    ruleEl = `<line x1="${L}" y1="${Y(o.rule).toFixed(1)}" x2="${W-R}" y2="${Y(o.rule).toFixed(1)}" stroke="var(--text3)" stroke-width="1" stroke-dasharray="4 4"/>`;
+  }
+  const legend = o.legend
+    ? `<div class="legend">${series.map(s=>`<div><i style="background:${s.color}"></i>${esc(s.name||"")}</div>`).join("")}</div>` : "";
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}"><defs>${defs}</defs>${grid}${labels}${xlab}${ruleEl}${paths}</svg>${legend}`;
+}
+
+function barChart(items, opts){ // [{label, value, color}]
+  const o = Object.assign({ height:150 }, opts||{});
+  const W = 320, H = o.height, L = 34, R = 6, T = 8, B = 18;
+  if (!items.length) return `<div class="note t3">No data</div>`;
+  const max = Math.max(1, ...items.map(i=>i.value)) * 1.08;
+  const iw = (W - L - R) / items.length;
+  let grid = "", labels = "";
+  for (let i=0;i<=3;i++){
+    const v = max*i/3, y = T + (1 - v/max)*(H-T-B);
+    grid += `<line x1="${L}" y1="${y.toFixed(1)}" x2="${W-R}" y2="${y.toFixed(1)}" stroke="var(--line)" stroke-width="1"/>`;
+    labels += `<text x="${L-5}" y="${(y+3).toFixed(1)}" font-size="9" fill="var(--text3)" text-anchor="end">${fmtAxis(v)}</text>`;
+  }
+  const bars = items.map((it, i) => {
+    const h = Math.max(0, it.value / max) * (H - T - B);
+    const x = L + i*iw + iw*0.18, w = iw*0.64, y = H - B - h;
+    return `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${w.toFixed(1)}" height="${Math.max(0.5,h).toFixed(1)}" rx="3" fill="${it.color}"/>`
+         + (items.length <= 13 ? `<text x="${(x+w/2).toFixed(1)}" y="${H-5}" font-size="8" fill="var(--text3)" text-anchor="middle">${esc(it.label)}</text>` : "");
+  }).join("");
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}">${grid}${labels}${bars}</svg>`;
+}
+
+/* ---- fields ---- */
+function fld(label, get, set, o){
+  o = o || {};
+  const k = H(v => { const n = parseFloat(v); set(isFinite(n) ? n : 0); save(); render(); });
+  const val = get();
+  const shown = PRIVACY ? `<span class="sml" style="color:var(--text3)">✱✱✱✱</span>`
+    : `<input type="number" inputmode="decimal" value="${val}" onchange="RUNV('${k}', this.value)">`
+      + (o.suffix ? `<span class="sfx">${esc(o.suffix)}</span>` : "");
+  const slider = (o.min !== undefined && !PRIVACY)
+    ? `<input type="range" min="${o.min}" max="${o.max}" step="${o.step||1}" value="${Math.min(o.max, Math.max(o.min, val))}"
+         oninput="this.closest('.fld').querySelector('input[type=number]').value=this.value"
+         onchange="RUNV('${k}', this.value)">` : "";
+  return `<div class="fld"><div class="top"><label>${esc(label)}</label>${shown}</div>${slider}</div>`;
+}
+function txt(label, get, set, o){
+  o = o || {};
+  const k = H(v => { set(v); save(); if (!o.quiet) render(); });
+  return `<div class="fld"><div class="top">${label ? `<label>${esc(label)}</label>`:""}`
+       + `<input type="text" class="${label?"":"wide"}" value="${esc(get())}" onchange="RUNV('${k}', this.value)"></div></div>`;
+}
+function toggle(label, get, set){
+  const k = H(() => { set(!get()); save(); render(); });
+  return `<div class="toggle" onclick="RUN('${k}')"><span>${esc(label)}</span><span class="sp"></span>`
+       + `<span class="sw${get()?" on":""}"><i></i></span></div>`;
+}
+function segmented(options, current, onPick){
+  return `<div class="seg">` + options.map((o,i) =>
+    `<button class="${current===i?"on":""}" onclick="RUN('${H(()=>onPick(i))}')">${esc(o)}</button>`).join("") + `</div>`;
+}
+function symbolPicker(list, current, onPick){
+  return `<div class="symrow">` + list.map(s =>
+    `<button class="${current===s?"on":""}" onclick="RUN('${H(()=>onPick(s))}')">${icon(s)}</button>`).join("") + `</div>`;
+}
+function addButton(label, onTap){
+  return `<div class="addbtn" onclick="RUN('${H(onTap)}')">${icon("plus.circle.fill",18)}<span>${esc(label)}</span></div>`;
+}
+function linkCard(symbol, title, subtitle, tint, onTap){
+  return card(`<div class="row"><span style="color:${tint};display:flex">${icon(symbol)}</span>`
+    + `<div style="flex:1"><div style="font-size:13px;font-weight:600">${esc(title)}</div>`
+    + (subtitle ? `<div class="note">${esc(subtitle)}</div>` : "") + `</div>${chev()}</div>`, { onTap });
+}
+
+/* =========================================================
+   ROUTER
+   ========================================================= */
+const TABS = [
+  { key:"today",    label:"Today",    symbol:"sun.max.fill" },
+  { key:"flow",     label:"Flow",     symbol:"arrow.left.arrow.right" },
+  { key:"goals",    label:"Goals",    symbol:"target" },
+  { key:"wealth",   label:"Wealth",   symbol:"chart.pie.fill" },
+  { key:"insights", label:"Insights", symbol:"lightbulb.fill" }
+];
+let TAB = 0;
+let STACK = [];          // pushed detail screens: {view, props}
+const SEGSTATE = { flow:0, wealth:0 };
+
+function go(view, props){ STACK.push({ view, props: props||{} }); render(); window.scrollTo(0,0); }
+function back(){ STACK.pop(); render(); }
+function setTab(i){ TAB = i; STACK = []; render(); }
+
+const VIEWS = {};   // name -> fn(props) => {title, body, right?}
+
+function render(){
+  const app = document.getElementById("screen");
+  const nav = document.getElementById("nav");
+  const top = STACK.length ? STACK[STACK.length-1] : { view: TABS[TAB].key, props:{} };
+  const fn = VIEWS[top.view];
+  let out;
+  try { out = fn ? fn(top.props) : { title:"?", body:`<div class="note">Missing view: ${esc(top.view)}</div>` }; }
+  catch(err){
+    console.error(err);
+    out = { title:"Error", body: card(sect("Something went wrong","exclamationmark.triangle.fill",C.danger)
+      + note(String(err && err.message || err))) };
+  }
+  const left = STACK.length
+    ? `<button class="link" onclick="RUN('${H(back)}')">${icon("chevron.left",16)}Back</button>` : "";
+  nav.innerHTML = `<div class="slot left">${left}</div><div class="title">${esc(out.title)}</div>`
+                + `<div class="slot right">${out.right || ""}</div>`;
+  app.innerHTML = `<div class="stack">${out.body}</div>`;
+  app.scrollTop = STACK.length ? 0 : app.scrollTop;
+  document.getElementById("tabbar").innerHTML = TABS.map((t,i) =>
+    `<button class="${i===TAB && !STACK.length ? "on" : (i===TAB?"on":"")}" onclick="RUN('${H(()=>setTab(i))}')">`
+    + `${icon(t.symbol,22)}<span>${t.label}</span></button>`).join("");
+}
+
+/* ---- sheets (modal editors) ---- */
+let SHEET = null;
+function openSheet(cfg){ SHEET = cfg; renderSheet(); }
+function closeSheet(){ SHEET = null; document.getElementById("sheet").classList.remove("open"); render(); }
+function renderSheet(){
+  const el = document.getElementById("sheet");
+  if (!SHEET){ el.classList.remove("open"); return; }
+  el.classList.add("open");
+  const head = el.querySelector(".head"), body = el.querySelector(".body");
+  head.innerHTML = `<button onclick="RUN('${H(()=>{ if(SHEET.onCancel) SHEET.onCancel(); closeSheet(); })}')">Cancel</button>`
+    + `<div class="t">${esc(SHEET.title)}</div>`
+    + `<button class="done" onclick="RUN('${H(()=>{ if(SHEET.onDone) SHEET.onDone(); closeSheet(); })}')">${esc(SHEET.doneLabel||"Save")}</button>`;
+  body.innerHTML = SHEET.body();
+  body.scrollTop = 0;
+  el.querySelector(".scrim").onclick = () => { if (SHEET.onCancel) SHEET.onCancel(); closeSheet(); };
+}
+function refreshSheet(){ if (SHEET) renderSheet(); }
+/* =========================================================
+   SCREENS
+   ========================================================= */
+const pts = (states, f) => states.map(s => [s.idx, f(s)]);
+
+/* ---------------- TODAY ---------------- */
+VIEWS.today = () => {
+  const c = STORE.config, a = STORE.actuals;
+  const { plan: s, real: realSim } = sims();
+  const plan = s.planNow();
+  const nw = netWorthOf(a, c, STORE.cards);
+  const bd = driftBreakdown(plan, c, a);
+  const drift = bd.drift;
+  const impacts = goalImpacts(s, realSim, c);
+  const consequence = deviationSummary(drift, impacts);
+  const inc = plan ? incomeOf(plan) : 0;
+  const out = plan ? outgoOf(plan, c, goalEMIsDue(plan, c, s)) : 0;
+  const driftTint = drift >= 0 ? C.income : C.goals;
+
+  const lastUpd = a.lastUpdated ? new Date(a.lastUpdated) : null;
+  const needsCheckIn = !lastUpd || lastUpd.getFullYear()*12 + lastUpd.getMonth() !== nowIdx();
+  const streak = checkInStreak();
+  const sub = [
+    streak > 0 ? `${streak}-month streak` : null,
+    lastUpd ? "last: " + MONTHS[lastUpd.getMonth()] + " " + lastUpd.getDate()
+            : "update balances to start tracking drift"
+  ].filter(Boolean).join(" · ");
+
+  const goalRow = (symbol, tint, title, status, statusTint, onTap) =>
+    `<div class="row" style="cursor:pointer" onclick="RUN('${H(onTap)}')">`
+    + `<span style="color:${tint};display:flex">${icon(symbol)}</span>`
+    + `<span class="lbl em">${esc(title)}</span><span class="sp"></span>`
+    + `<span style="font-size:11.5px;font-weight:600;color:${statusTint}">${esc(status)}</span>${chev()}</div>`;
+
+  const goalRows = c.goals.filter(g => g.enabled).map(g => {
+    const funded = s.goalFunded[g.id];
+    const projected = s.finalValue(g.id);
+    const ok = funded !== undefined || projected >= fundedTarget(g)*0.95;
+    return goalRow(g.symbol, g.bucket === "liquid" ? C.goals : C.income, g.name,
+      funded !== undefined ? monthName(funded) : (ok ? "On track" : "Short"),
+      ok ? C.income : C.goals, () => go("goalDetail", { id:g.id }));
+  }).join("");
+
+  const retF = s.need > 0 ? s.retAssets / s.need * 100 : 100;
+
+  const body = [
+    card(
+      `<div style="cursor:pointer" onclick="RUN('${H(()=>go("networth"))}')">`
+      + `<div class="sect" style="margin-bottom:2px"><span style="color:${C.wealth}">${icon("chart.pie.fill")}</span>Net worth ${chev()}</div>`
+      + `<div class="hero rnd" style="color:${C.wealth}">${esc(fmt(nw.net))}</div></div>`
+      + `<div style="cursor:pointer;margin-top:4px" onclick="RUN('${H(()=>go("impact"))}')">`
+      + `<div style="display:flex;align-items:center;gap:6px;color:${driftTint};font-size:13px;font-weight:500">`
+      + icon(drift >= 0 ? "checkmark.circle.fill" : "exclamationmark.triangle.fill", 14)
+      + `<span>${drift >= 0 ? fmt(drift) + " ahead of plan" : fmt(-drift) + " behind plan"}</span>${chev()}</div>`
+      + `<div class="note" style="margin-top:4px">${esc(consequence)}</div></div>`, { tight:true }),
+
+    `<div class="banner"><div class="k">${icon("bolt.fill",12)}THIS MONTH</div>`
+    + `<div class="v">${esc(actionText(plan, c))}</div></div>`,
+
+    `<div class="card tap" style="background:${needsCheckIn ? "color-mix(in srgb, var(--safety) 12%, var(--surface))" : "var(--surface)"}"
+        onclick="RUN('${H(()=>openCheckIn())}')">`
+    + `<div class="row"><span style="color:${needsCheckIn?C.safety:C.income};display:flex">${icon("checkmark.circle.fill",20)}</span>`
+    + `<div style="flex:1"><div style="font-size:14px;font-weight:600;color:${needsCheckIn?C.safety:C.t1}">`
+    + `${needsCheckIn ? "Time for your monthly check-in" : "Check-in saved this month"}</div>`
+    + `<div class="note">${esc(sub)}</div></div>${chev()}</div></div>`,
+
+    `<div class="grid2">`
+    + tile("Monthly surplus", fmt(plan ? plan.surplus : 0), "after expenses & EMIs", "arrow.down.circle.fill", C.income)
+    + tile("Money out", fmt(out), "expenses + EMIs", "arrow.up.circle.fill", C.outgo)
+    + tile("Liquid assets", fmt(nw.liquid), "deployable today", "drop.fill", C.safety)
+    + tile("Debt", fmt(nw.liabilities), "loans + card dues", "creditcard.fill", C.outgo)
+    + `</div>`,
+
+    card(sect("Goals","target",C.goals)
+      + goalRow("lifepreserver.fill", C.safety, "Emergency fund",
+          a.fdSavings >= (plan ? plan.efTarget : 1) ? "Funded" : "by " + monthName(s.efDone),
+          a.fdSavings >= (plan ? plan.efTarget : 1) ? C.income : C.goals, ()=>go("emergency"))
+      + goalRow("creditcard.fill", C.outgo, "Personal loan",
+          a.plOutstanding <= 0 ? "Closed" : "by " + monthName(s.plDone),
+          a.plOutstanding <= 0 ? C.income : C.goals, ()=>go("loanPayoff"))
+      + goalRows
+      + goalRow("beach.umbrella.fill", C.wealth, "Retirement", Math.round(retF) + "% funded",
+          retF >= 100 ? C.income : (retF >= 70 ? C.goals : C.danger), ()=>go("retirement"))),
+
+    card(`<div class="row">${sect("Cash flow","arrow.left.arrow.right",C.income)}<span class="sp"></span>${chev()}</div>`
+      + splitBar([["Income — salary + rents", inc, C.income, "arrow.down.circle.fill"],
+                  ["Outgo — expenses + EMIs", out, C.outgo, "arrow.up.circle.fill"]]),
+      { onTap: ()=>{ SEGSTATE.flow = 0; setTab(1); } })
+  ].join("");
+
+  const right = `<button onclick="RUN('${H(()=>{ STORE.privacy = !STORE.privacy; PRIVACY = STORE.privacy; save(); render(); })}')">`
+    + icon(STORE.privacy ? "eye.slash" : "eye", 20) + `</button>`
+    + `<button onclick="RUN('${H(()=>go("settings"))}')">${icon("gearshape",20)}</button>`;
+  return { title:"WealthPilot", body, right };
+};
+
+/* ---------------- GOALS ---------------- */
+VIEWS.goals = () => {
+  const c = STORE.config, a = STORE.actuals;
+  const s = sims().plan;
+  const plan = s.planNow();
+
+  const bigRow = (o) => card(
+    `<div class="row"><span class="avatar" style="background:color-mix(in srgb, ${o.tint} 15%, transparent);color:${o.tint}">${icon(o.symbol)}</span>`
+    + `<div style="flex:1;min-width:0"><div style="display:flex;align-items:center;gap:5px">`
+    + `<span style="font-size:15px;font-weight:600">${esc(o.title)}</span>`
+    + (o.builtIn ? `<span style="color:var(--text3);display:flex">${icon("lock.fill",9)}</span>` : "") + `</div>`
+    + `<div style="font-size:12px;color:var(--text2)">${esc(o.subtitle)}</div></div>`
+    + `<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">${pill(o.status, o.statusTint)}${chev()}</div></div>`
+    + progress(o.progress, o.tint), { onTap:o.onTap });
+
+  const userGoals = c.goals.map(g => {
+    const val = plan ? (plan.goalVal[g.id] || 0) : 0;
+    const funded = s.goalFunded[g.id];
+    const projected = s.finalValue(g.id);
+    const ok = funded !== undefined || projected >= fundedTarget(g)*0.95;
+    return bigRow({
+      symbol:g.symbol, tint: g.bucket === "liquid" ? C.goals : C.income, title:g.name,
+      subtitle: g.enabled
+        ? `${fmt(val)} of ${fmt(fundedTarget(g))}` + (financed(g) > 0 ? ` + finance ${fmt(financed(g))}` : "")
+        : "paused",
+      status: !g.enabled ? "Paused" : (funded !== undefined ? monthName(funded) : (ok ? "On track" : "Short")),
+      statusTint: !g.enabled ? C.t2 : (ok ? C.income : C.goals),
+      progress: val / Math.max(1, fundedTarget(g)),
+      builtIn:false, onTap: ()=>go("goalDetail", { id:g.id })
+    });
+  }).join("");
+
+  const retF = s.need > 0 ? s.retAssets / s.need * 100 : 100;
+
+  const body = [
+    bigRow({ symbol:"lifepreserver.fill", tint:C.safety, title:"Emergency fund",
+      subtitle:`${fmt(a.fdSavings)} of ${fmt(plan ? plan.efTarget : 0)}`,
+      status: a.fdSavings >= (plan?plan.efTarget:1) ? "Funded" : "by " + monthName(s.efDone),
+      statusTint: a.fdSavings >= (plan?plan.efTarget:1) ? C.income : C.goals,
+      progress: a.fdSavings / Math.max(1, plan ? plan.efTarget : 1), builtIn:true, onTap:()=>go("emergency") }),
+    bigRow({ symbol:"creditcard.fill", tint:C.outgo, title:"Close personal loan",
+      subtitle:`${fmt(a.plOutstanding)} left`,
+      status: a.plOutstanding <= 0 ? "Closed" : "by " + monthName(s.plDone),
+      statusTint: a.plOutstanding <= 0 ? C.income : C.goals,
+      progress: 1 - a.plOutstanding/800000, builtIn:true, onTap:()=>go("loanPayoff") }),
+    c.goals.length ? "" : card(sect("No goals yet","target")
+      + note("Add a goal — a car, a house deposit, a child's education, a business. Each one gets its own funding schedule and tells you when it's slipping."), {tight:true}),
+    userGoals,
+    bigRow({ symbol:"beach.umbrella.fill", tint:C.wealth, title:`Retire ${Math.round(c.retireYear)}`,
+      subtitle:`${fmt(s.retAssets)} of ${fmt(s.need)}`, status:`${Math.round(retF)}% funded`,
+      statusTint: retF >= 100 ? C.income : (retF >= 70 ? C.goals : C.danger),
+      progress: retF/100, builtIn:true, onTap:()=>go("retirement") }),
+    addButton("Add a goal", ()=>editGoal(newGoal(), true)),
+    `<div class="note t3">Goals are funded in the order shown, after the emergency fund and personal loan. Tap a goal to edit, pause, delete — or use the reorder button to change funding priority.</div>`
+  ].join("");
+
+  const right = `<button onclick="RUN('${H(()=>go("reorder"))}')">${icon("arrow.up.arrow.down",20)}</button>`;
+  return { title:"Goals", body, right };
+};
+
+VIEWS.reorder = () => {
+  const gs = STORE.config.goals;
+  const move = (i, d) => {
+    const j = i + d; if (j < 0 || j >= gs.length) return;
+    const t = gs[i]; gs[i] = gs[j]; gs[j] = t; save(); render();
+  };
+  const body = card(sect("Funding priority","arrow.up.arrow.down",C.wealth)
+    + gs.map((g,i) => `<div class="row" style="padding:4px 0">`
+      + `<span style="color:${g.bucket==="liquid"?C.goals:C.income};display:flex">${icon(g.symbol)}</span>`
+      + `<div style="flex:1"><div style="font-size:14px;font-weight:600">${esc(g.name)}</div>`
+      + `<div class="note">${esc(fmt(g.monthly))}/mo · target ${esc(fmt(g.target))} by ${Math.round(g.targetYear)}</div></div>`
+      + `<button style="padding:6px;opacity:${i===0?0.25:1}" onclick="RUN('${H(()=>move(i,-1))}')"><span style="display:inline-block;transform:rotate(-90deg)">${icon("chevron.right",16)}</span></button>`
+      + `<button style="padding:6px;opacity:${i===gs.length-1?0.25:1}" onclick="RUN('${H(()=>move(i,1))}')"><span style="display:inline-block;transform:rotate(90deg)">${icon("chevron.right",16)}</span></button>`
+      + `</div>`).join(""))
+    + card(note("Surplus flows top to bottom. Whatever is left after the last goal goes to retirement."), {tight:true});
+  return { title:"Priority", body };
+};
+
+/* ---------------- FLOW ---------------- */
+VIEWS.flow = () => {
+  const seg = segmented(["Cash flow","Recurring","Cards","Loans"], SEGSTATE.flow, i => { SEGSTATE.flow = i; render(); });
+  const inner = [cashFlowBody, recurringBody, cardsBody, loansBody][SEGSTATE.flow]();
+  return { title:"Flow", body: seg + `<div class="stack">` + inner + `</div>` };
+};
+
+function cashFlowBody(){
+  const c = STORE.config;
+  const s = sims().plan;
+  const plan = s.planNow();
+  const next12 = s.states.filter(m => m.idx >= nowIdx()).slice(0, 12);
+  let out = "";
+
+  if (plan){
+    const emis = goalEMIsDue(plan, c, s);
+    out += card(
+      sect("Money in","arrow.down.circle.fill",C.income)
+      + row("Salary (take-home)", fmt(plan.th), {symbol:"briefcase.fill", tint:C.income})
+      + row("Agartala rent (your share)", fmt(plan.agInc), {symbol:"building.2.fill", tint:C.income})
+      + row("Chennai rent", fmt(plan.chRent), {symbol:"house.fill", tint:C.income})
+      + (plan.month === 0 ? row("Annual bonus", fmt(c.bonus*plan.th/c.income), {symbol:"gift.fill", tint:C.income}) : "")
+      + divider() + row("Total in", fmt(incomeOf(plan)), {em:true})
+      + `<div style="height:6px"></div>`
+      + sect("Money out","arrow.up.circle.fill",C.outgo)
+      + row("House rent + living", fmt(plan.exp), {symbol:"cart.fill", tint:C.outgo})
+      + row("Wife's expenses", fmt(plan.wifeExp), {symbol:"person.fill", tint:C.outgo})
+      + recurringDueItems(c, plan.idx).map(e => row(e.item.name, fmt(e.amount), {symbol:e.item.symbol, tint:C.outgo})).join("")
+      + (plan.pl > 0 ? row("Personal loan EMI", fmt(c.plEMI), {symbol:"creditcard.fill", tint:C.outgo}) : "")
+      + (plan.ch > 0 ? row("Chennai home EMI", fmt(c.chEMI + c.chPrepay), {symbol:"house.fill", tint:C.outgo}) : "")
+      + c.goals.filter(g => (plan.goalLoan[g.id]||0) > 0)
+          .map(g => row(g.name + " loan EMI", fmt(s.goalLoanEMI[g.id]||0), {symbol:g.symbol, tint:C.outgo})).join("")
+      + divider() + row("Total out", fmt(outgoOf(plan, c, emis)), {em:true})
+      + `<div class="row" style="padding-top:4px"><span class="sect" style="margin:0">Net → invested</span><span class="sp"></span>`
+      + `<span class="big rnd" style="color:${C.income}">${esc(fmt(incomeOf(plan) - outgoOf(plan, c, emis)))}</span></div>`);
+  }
+
+  out += card(sect("The widening gap — 10 years","chart.line.uptrend.xyaxis",C.wealth)
+    + lineChart([
+        { name:"Income", points: pts(s.yearly, m => incomeOf(m)), color:C.income },
+        { name:"Outgo",  points: pts(s.yearly, m => outgoOf(m, c, goalEMIsDue(m, c, s))), color:C.outgo }
+      ], { height:170, legend:true })
+    + note(`Income compounds at ~10%+/yr (hikes plus rents); outgo at ~${Math.round(c.expInflation)}%. Everything between the lines becomes wealth.`));
+
+  out += card(sect("Next 12 months","calendar",C.wealth)
+    + next12.map(m => {
+        const i = incomeOf(m), o = outgoOf(m, c, goalEMIsDue(m, c, s));
+        return `<div class="row" style="padding:3px 0"><span style="width:74px;font-size:12px;font-weight:600">${monthName(m.idx)}</span>`
+          + `<div style="flex:1"><div style="font-size:11px;color:${C.income}">${esc(fmt(i))}</div>`
+          + `<div style="font-size:11px;color:${C.outgo}">${esc(fmt(o))}</div></div>`
+          + `<span class="sml" style="color:${C.income}">+${esc(fmt(i-o))}</span></div>`;
+      }).join(""));
+
+  out += linkCard("list.bullet.rectangle", "Where every rupee goes, month by month", "", C.wealth, ()=>go("allocation"));
+  return out;
+}
+
+function recurringBody(){
+  const c = STORE.config;
+  const active = c.recurring.filter(r => r.enabled);
+  const py = active.reduce((t,r)=> t + perYear(r), 0);
+  const pm = py / 12;
+  const months = [];
+  for (let i = nowIdx(); i < nowIdx() + 12; i++){
+    const items = recurringDueItems(c, i);
+    months.push({ idx:i, total: items.reduce((t,x)=> t + x.amount, 0), items });
+  }
+  const heaviest = months.reduce((a,b)=> b.total > (a ? a.total : -1) ? b : a, null);
+
+  let out = card(sect("Committed each year","calendar.badge.clock",C.outgo)
+    + `<div class="hero rnd" style="color:${C.outgo}">${esc(fmt(py))}</div>`
+    + note(`That's ${fmt(pm)} a month on average — money that leaves whether or not you budget for it.`)
+    + (heaviest && heaviest.total > 0
+        ? row("Heaviest month ahead", `${monthName(heaviest.idx)} · ${fmt(heaviest.total)}`,
+              {symbol:"exclamationmark.triangle.fill", tint:C.goals}) : ""), {tight:true});
+
+  out += card(sect("Next 12 months","calendar",C.wealth)
+    + barChart(months.map(m => ({ label:shortMonth(m.idx), value:m.total,
+        color: m.total >= pm*2 ? C.outgo : C.wealth })), { height:150 })
+    + months.filter(m => m.total > 0).map(m =>
+        `<div class="inset"><div class="row"><span style="font-size:13px;font-weight:700">${monthName(m.idx)}</span>`
+        + `<span class="sp"></span><span class="sml" style="color:${m.total >= pm*2 ? C.outgo : C.t1}">${esc(fmt(m.total))}</span></div>`
+        + m.items.map(e => row(e.item.name, fmt(e.amount), {symbol:e.item.symbol})).join("") + `</div>`).join(""));
+
+  out += card(sect("Your commitments","list.bullet",C.goals)
+    + (c.recurring.length ? "" : note("Nothing added yet. Insurance premiums, school fees, property tax, annual subscriptions — anything that isn't a monthly bill."))
+    + c.recurring.map(rp =>
+        `<div class="row" style="cursor:pointer;padding:2px 0" onclick="RUN('${H(()=>editRecurring(rp, false))}')">`
+        + `<span style="color:${rp.enabled?C.goals:C.t2};display:flex">${icon(rp.symbol)}</span>`
+        + `<div style="flex:1"><div style="font-size:13px;font-weight:600;color:${rp.enabled?C.t1:C.t2}">${esc(rp.name)}</div>`
+        + `<div class="note">${esc(fmt(rp.amount))} · ${FREQ[rp.frequency].label} · ${esc(fmt(perYear(rp)))}/yr</div></div>${chev()}</div>`).join(""));
+
+  out += addButton("Add a payment", ()=>editRecurring(newRecurring(), true));
+  out += card(sect("Careful not to double-count","exclamationmark.triangle.fill",C.goals)
+    + note(`These are subtracted on top of your monthly living expenses (currently ${fmt(c.livingExp)}). If some of them are already inside that figure, lower it in Settings by about ${fmt(pm)} so the plan doesn't charge you twice.\n\nThe emergency fund target also grows to cover the monthly average, since a job loss doesn't pause your premiums.`), {tight:true});
+  return out;
+}
+
+function cardsBody(){
+  const guide = [
+    ["Swiggy / Instamart","Swiggy Card","10% back (cap ₹1.5k/mo)","bag.fill"],
+    ["Flipkart / Cleartrip","Flipkart Card","5% / 4% back","cart.fill"],
+    ["Flights, hotels, vouchers","Diners → SmartBuy","10X points, up to ~33%","airplane"],
+    ["Other online shopping","Swiggy Card","5% to cap, then Diners","laptopcomputer"],
+    ["Utilities & small bills","Amex MRCC","4 × ₹1.5k → 1,000 pts","bolt.fill"],
+    ["Dining out","Diners Black","3.3% + dining perks","fork.knife"],
+    ["Fuel","Diners Black","surcharge waiver","fuelpump.fill"],
+    ["Everything else","Diners Black","3.3% — best base rate","creditcard.fill"]
+  ];
+  let out = card(sect("Reward points held","star.circle.fill",C.goals)
+    + `<div class="hero rnd" style="color:${C.goals}">${esc(fmt(pointsValue()))}</div>`
+    + note("Across all cards, at best realistic redemption. Diners points are worth roughly twice as much via SmartBuy flights and hotels as via cashback or the product catalogue — redeem there."), {tight:true});
+
+  out += card(sect("Which card for what","wand.and.stars",C.goals)
+    + guide.map(g => `<div class="row"><span style="color:${C.wealth};display:flex">${icon(g[3])}</span>`
+      + `<span class="lbl" style="font-size:12.5px">${esc(g[0])}</span><span class="sp"></span>`
+      + `<div style="text-align:right"><div style="font-size:12px;font-weight:600">${esc(g[1])}</div>`
+      + `<div style="font-size:10.5px;color:var(--text2)">${esc(g[2])}</div></div></div>`).join("")
+    + note("Diners is home base. Swiggy card until its caps fill. Exactly 4 utility bills on Amex. Flipkart card only on Flipkart."));
+
+  out += STORE.cards.map(cd => {
+    const ms = cd.milestones.map(m => {
+      const hit = m.progress >= m.target;
+      const left = Math.max(0, m.target - m.progress);
+      return `<div class="inset">`
+        + `<div class="row"><span style="font-size:12px;font-weight:600;flex:1">${esc(m.title)}</span>`
+        + pill(m.deadline || m.period, hit ? C.income : C.goals)
+        + `<button onclick="RUN('${H(()=>{ cd.milestones = cd.milestones.filter(x=>x.id!==m.id); save(); render(); })}')" style="color:var(--text3);display:flex">${icon("minus.circle.fill",14)}</button></div>`
+        + fld("Target", ()=>m.target, v=>m.target=v, {min:0,max:2000000,step:5000})
+        + progress(m.progress / Math.max(1, m.target), hit ? C.income : C.goals)
+        + `<div class="row"><span style="font-size:11px;color:${hit?C.income:C.t2}">`
+        + esc(hit ? `${m.reward} earned` : `${m.target < 100 ? Math.round(left) : fmt(left)} to go → ${m.reward}`) + `</span>`
+        + `<span class="sp"></span>` + (m.valueINR > 0 && !hit
+            ? `<span style="font-size:10.5px;font-weight:600;color:${C.goals}">worth ~${esc(fmt(m.valueINR))}</span>` : "") + `</div>`
+        + (!hit && left > 0 && m.valueINR > 0
+            ? `<div class="note t3">Marginal return on the remaining spend: ${(m.valueINR/left*100).toFixed(1)}%</div>` : "")
+        + fld("Progress", ()=>m.progress, v=>m.progress=v, {min:0,max:Math.max(10,m.target*1.2),step:m.target<100?1:5000})
+        + `</div>`;
+    }).join("");
+    return card(
+      `<div class="row">${txt("", ()=>cd.name, v=>cd.name=v)}`
+      + (cd.points > 0 ? pill(Math.round(cd.points) + " pts", C.goals) : "")
+      + `<button onclick="RUN('${H(()=>{ cd.milestones.push({id:uid(),title:"New milestone",target:100000,progress:0,period:"monthly",reward:"Reward",deadline:"",valueINR:0}); save(); render(); })}')" style="color:var(--text2);display:flex">${icon("plus.circle.fill",18)}</button>`
+      + `<button onclick="RUN('${H(()=>{ if(confirm("Delete this card?")){ STORE.cards = STORE.cards.filter(x=>x.id!==cd.id); save(); render(); } })}')" style="color:var(--text3);display:flex">${icon("trash",16)}</button></div>`
+      + note(cd.baseReward)
+      + (cd.points > 0 ? row("Points worth about", fmt(cd.points*cd.pointValue), {symbol:"star.fill", tint:C.goals})
+                       + fld("Points balance", ()=>cd.points, v=>cd.points=v, {min:0,max:200000,step:500}) : "")
+      + fld("Statement due", ()=>cd.due, v=>cd.due=v, {min:0,max:300000,step:1000})
+      + ms + note(cd.strategy));
+  }).join("");
+
+  out += addButton("Add a card", ()=>{ STORE.cards.push({id:uid(),name:"New card",emoji:"",baseReward:"Reward rate",strategy:"When to use it",due:0,points:0,pointValue:1,milestones:[]}); save(); render(); });
+  out += card(sect("Ground rules","exclamationmark.triangle.fill",C.goals)
+    + note("Chase a milestone only with spending you'd do anyway. The Diners quarterly bonus is worth ₹5–10k — never worth manufacturing ₹1.8L of spend to reach. HDFC also excludes rent, fuel, wallet loads and EMIs from rewards, so those likely don't count toward milestones either; verify before relying on them.\n\nReward rules change often — check caps and targets against your latest T&Cs; everything above is editable. And the rule that beats every optimisation: always pay in full. One month of 42% APR erases a year of rewards."), {tight:true});
+  return out;
+}
+
+function loanCard(o){
+  return card(
+    `<div class="row"><span class="avatar sm" style="background:color-mix(in srgb, ${o.tint} 15%, transparent);color:${o.tint}">${icon(o.symbol,15)}</span>`
+    + `<div style="flex:1"><div style="font-size:15px;font-weight:600">${esc(o.title)}</div>`
+    + `<div class="num rnd" style="color:${o.tint}">${esc(fmt(o.balance))}</div></div>`
+    + pill(o.closes !== null && o.closes !== undefined ? "closes " + monthName(o.closes) : "open", o.tint) + `</div>`
+    + o.rows.map(r => row(r[0], r[1])).join("")
+    + row("Interest till close", fmt(o.interest))
+    + note(o.note)
+    + (o.schedule && o.schedule.length
+        ? `<details><summary style="font-size:12px;font-weight:600;cursor:pointer;color:var(--wealth)">Payoff schedule</summary>`
+          + `<div style="display:flex;flex-direction:column;gap:6px;padding-top:8px">`
+          + o.schedule.slice(0,24).map(r => row(r[0], r[1])).join("") + `</div></details>` : ""));
+}
+
+function loansBody(){
+  const c = STORE.config;
+  const s = sims().plan;
+  const plan = s.planNow();
+  let out = card(sect("All balances","chart.line.downtrend.xyaxis",C.wealth)
+    + lineChart([
+        { name:"Personal", points: pts(s.yearly, m=>m.pl), color:C.outgo },
+        { name:"Chennai",  points: pts(s.yearly, m=>m.ch), color:C.goals },
+        { name:"Agartala", points: pts(s.yearly, m=>m.ag), color:C.wealth }
+      ], { height:190, legend:true }));
+
+  out += loanCard({ title:"Personal loan", symbol:"creditcard.fill", tint:C.outgo,
+    balance:STORE.actuals.plOutstanding, closes:s.plDone, interest:s.intPL,
+    rows:[["Rate", c.plRate.toFixed(1)+"%"], ["EMI", fmt(c.plEMI)+" + surplus"]],
+    note:"Your entire surplus blitzes this once the emergency fund is full.",
+    schedule: s.states.filter(m=>m.actPL>0).map(m => [monthName(m.idx), `pay ${fmt(m.actPL + c.plEMI)} → ${fmt(m.pl)}`]) });
+
+  out += loanCard({ title:"Chennai home loan", symbol:"house.fill", tint:C.goals,
+    balance: plan ? plan.ch : c.chBal, closes:s.chDone, interest:s.intCH,
+    rows:[["Rate", c.chRate.toFixed(1)+"%"], ["EMI", fmt(c.chEMI + c.chPrepay)]],
+    note:"Serviced from salary; the property earns rent which funds your wife's expenses.",
+    schedule: s.states.filter(m=>m.month===0 && m.ch>0).map(m => [String(m.year), fmt(m.ch)]) });
+
+  out += card(sect("What if you prepay Chennai?","slider.horizontal.3",C.goals)
+    + fld("Extra prepay per month", ()=>c.chPrepay, v=>c.chPrepay=v, {min:0,max:100000,step:5000})
+    + row("Closes", monthName(s.chDone)) + row("Total interest", fmt(s.intCH)));
+
+  out += loanCard({ title:"Agartala loan (family)", symbol:"building.2.fill", tint:C.wealth,
+    balance: plan ? plan.ag : c.agBal, closes:s.agDone, interest:s.intAG,
+    rows:[["Rate", c.agRate.toFixed(1)+"%"], ["EMI + prepay", fmt(c.agEMI)+" + "+fmt(c.agPrepay)]],
+    note:"Joint loan serviced by Agartala rentals, not your personal surplus. Your rental share jumps once it closes.",
+    schedule: s.states.filter(m=>m.month===0 && m.ag>0).map(m => [String(m.year), fmt(m.ag)]) });
+
+  const financedGoals = c.goals.filter(g => g.enabled && financed(g) > 0);
+  out += financedGoals.map(g => loanCard({
+    title: g.name + " loan", symbol:g.symbol, tint:C.income,
+    balance: plan ? (plan.goalLoan[g.id]||0) : 0,
+    closes: s.goalLoanClosed[g.id], interest: s.goalLoanInterest[g.id] || 0,
+    rows:[["Starts when bought", monthName(s.goalFunded[g.id])],
+          ["Loan amount", `${fmt(financed(g))} @ ${g.loanRate.toFixed(1)}%`],
+          ["EMI", `${fmt(s.goalLoanEMI[g.id]||0)} × ${Math.round(g.loanYears)}y`]],
+    note:`You save the ${Math.round(g.downPct)}% upfront share and finance the rest — worth it while your investments out-earn the loan. Change the split in the goal itself.`,
+    schedule: s.states.filter(m=>m.month===0 && (m.goalLoan[g.id]||0)>0).map(m => [String(m.year), fmt(m.goalLoan[g.id]||0)])
+  })).join("");
+
+  if (!financedGoals.length){
+    out += card(sect("No goal loans","checkmark.circle.fill",C.income)
+      + note("None of your goals are part-financed. Set a goal's upfront share below 100% to model buying it with a loan."), {tight:true});
+  }
+  return out;
+}
+
+VIEWS.allocation = () => {
+  const s = sims().plan;
+  const months = s.states.filter(m => m.idx >= nowIdx()).slice(0,12);
+  const body = months.map(m => card(
+    `<div style="font-size:15px;font-weight:700">${monthName(m.idx)}</div>`
+    + row("Investable surplus", fmt(m.surplus), {em:true}) + divider()
+    + (m.actEF > 0 ? row("Emergency fund", fmt(m.actEF), {symbol:"lifepreserver.fill", tint:C.safety}) : "")
+    + (m.actPL > 0 ? row("Loan prepay", fmt(m.actPL), {symbol:"creditcard.fill", tint:C.outgo}) : "")
+    + STORE.config.goals.filter(g => (m.goalContrib[g.id]||0) > 0)
+        .map(g => row(g.name, fmt(m.goalContrib[g.id]), {symbol:g.symbol, tint: g.bucket==="liquid"?C.goals:C.income})).join("")
+    + (m.actRet > 0 ? row("Retirement equity", fmt(m.actRet), {symbol:"beach.umbrella.fill", tint:C.wealth}) : "")
+    + divider() + row("Loan balance after", fmt(m.pl)) + row("Emergency fund after", fmt(m.ef)), {tight:true})).join("");
+  return { title:"Monthly allocation", body };
+};
+
+/* ---------------- WEALTH ---------------- */
+VIEWS.wealth = () => {
+  const seg = segmented(["Portfolio","Projections","History"], SEGSTATE.wealth, i => { SEGSTATE.wealth = i; render(); });
+  const inner = [portfolioBody, projectionsBody, historyBody][SEGSTATE.wealth]();
+  return { title:"Wealth", body: seg + `<div class="stack">` + inner + `</div>` };
+};
+
+function portfolioBody(){
+  const c = STORE.config, a = STORE.actuals;
+  const s = sims().plan;
+  const n = netWorthOf(a, c, STORE.cards);
+  let out = card(`<div class="row">${sect("Net worth","chart.pie.fill",C.wealth)}<span class="sp"></span>${chev()}</div>`
+    + `<div class="hero rnd" style="color:${C.wealth}">${esc(fmt(n.net))}</div>`
+    + `<div class="note t3">${esc(fmt(n.assets))} assets − ${esc(fmt(n.liabilities))} liabilities · tap for the full breakdown</div>`,
+    { tight:true, onTap:()=>go("networth") });
+
+  out += card(sect("Asset mix","square.stack.3d.up.fill",C.wealth)
+    + splitBar([["Liquid — stocks, MF, FD", n.liquid, C.safety, "drop.fill"],
+                ["Retirement — EPF + NPS", n.locked, C.wealth, "lock.fill"],
+                ["Hard — property, vehicle", n.hard, C.goals, "house.fill"]]));
+
+  out += card(sect("Stocks target","target",C.income)
+    + `<div style="display:flex;align-items:baseline;gap:8px"><span class="big rnd" style="color:${C.income}">${n.stocksPct.toFixed(1)}%</span>`
+    + `<span style="font-size:12px;color:var(--text2)">of net worth · goal 60%</span></div>`
+    + progress(n.stocksPct/60, C.income)
+    + note("Your wealth currently sits in property and retirement accounts. The plan moves this steadily from 2027 as surplus flows into equity."));
+
+  out += card(sect("Holdings","list.bullet",C.t2)
+    + row("US stocks", fmt(a.usValue), {symbol:"globe.americas.fill", tint:C.wealth})
+    + row("India stocks + MF", fmt(a.inValue), {symbol:"globe.asia.australia.fill", tint:C.goals})
+    + row("Emergency fund", fmt(a.fdSavings), {symbol:"lifepreserver.fill", tint:C.safety})
+    + row("EPF", fmt(a.epf), {symbol:"building.columns.fill", tint:C.wealth})
+    + row("NPS", fmt(a.nps), {symbol:"shield.lefthalf.filled", tint:C.wealth})
+    + row("Chennai property", fmt(a.chennaiProperty), {symbol:"house.fill", tint:C.goals})
+    + row("Agartala share", fmt(a.agartalaProperty), {symbol:"building.2.fill", tint:C.goals})
+    + row("Vehicle", fmt(a.vehicle), {symbol:"car.2.fill", tint:C.goals}));
+
+  out += linkCard("calendar.badge.clock", "Year by year — next 10 years", "", C.wealth, ()=>go("yearly"));
+
+  out += card(sect("Projected growth","chart.line.uptrend.xyaxis",C.wealth)
+    + lineChart([
+        { name:"Retirement", points: pts(s.yearly, m => m.ret + m.epf + m.nps), color:C.wealth },
+        { name:"Goals", points: pts(s.yearly, m => m.goalsTotal), color:C.income },
+        { name:"Need", points: pts(s.yearly, () => s.need), color:C.danger, dashed:true }
+      ], { height:190, legend:true }));
+  return out;
+}
+
+function projectionsBody(){
+  const c = STORE.config, a = STORE.actuals;
+  const s = sims().plan;
+  const plan = s.planNow();
+  const atR = s.atRetire;
+  let eqC = plan ? plan.actRet : 0;
+  if (plan) c.goals.filter(g => g.enabled && g.bucket === "equity").forEach(g => eqC += plan.goalContrib[g.id] || 0);
+  const usC = eqC * c.usAlloc / 100;
+
+  const stream = (o) => card(
+    `<div class="row"><span class="avatar sm" style="background:color-mix(in srgb, ${o.tint} 15%, transparent);color:${o.tint}">${icon(o.symbol,15)}</span>`
+    + `<div><div style="font-size:14px;font-weight:600">${esc(o.title)}</div>`
+    + `<div class="num rnd" style="color:${o.tint}">${esc(o.now)}</div></div></div>`
+    + (o.extra ? row(o.extra[0], o.extra[1], {em:true}) : "")
+    + lineChart([{ name:o.title, points:o.points, color:o.tint }], { height:120, filled:true })
+    + row(o.atLabel, o.atValue) + note(o.note));
+
+  let out = "";
+  out += stream({ title:"Salary", symbol:"briefcase.fill", tint:C.income,
+    now: fmt(plan ? plan.th : c.income) + "/mo", atLabel:`At ${Math.round(c.retireYear)}`, atValue: fmt(atR.th)+"/mo",
+    points: pts(s.yearly, m=>m.th),
+    note:`+10% Jan '27, then +${Math.round(c.hikeAnnual)}%/yr with +${Math.round(c.hikeSwitch)}% in switch years. Bonus grows with salary and is invested each January.` });
+
+  out += stream({ title:"Expenses", symbol:"cart.fill", tint:C.outgo,
+    now: fmt((plan?plan.exp:0) + (plan?plan.wifeExp:0)) + "/mo",
+    atLabel:`Household at ${Math.round(c.retireYear)}`, atValue: fmt(s.expThen)+"/mo",
+    points: pts(s.yearly, m=>m.exp + m.wifeExp),
+    note:`Rent, living and your wife's expenses, all inflating at ${Math.round(c.expInflation)}%/yr.` });
+
+  out += stream({ title:"US stocks", symbol:"globe.americas.fill", tint:C.wealth,
+    now: fmt(plan ? plan.usV : a.usValue), atLabel:`At ${Math.round(c.retireYear)}`, atValue: fmt(atR.usV),
+    points: pts(s.yearly, m=>m.usV), extra:["Invest this month", fmt(usC)],
+    note:`Gets ${Math.round(c.usAlloc)}% of every equity contribution. Watch LRS/TCS above ₹7L a year.` });
+
+  out += stream({ title:"India stocks + MF", symbol:"globe.asia.australia.fill", tint:C.goals,
+    now: fmt(plan ? plan.inV : a.inValue), atLabel:`At ${Math.round(c.retireYear)}`, atValue: fmt(atR.inV),
+    points: pts(s.yearly, m=>m.inV), extra:["Invest this month", fmt(eqC - usC)],
+    note:`Gets ${Math.round(100 - c.usAlloc)}% of every equity contribution.` });
+
+  out += stream({ title:"EPF", symbol:"building.columns.fill", tint:C.wealth,
+    now: fmt(plan ? plan.epf : c.epfBal), atLabel:`At ${Math.round(c.retireYear)}`, atValue: fmt(atR.epf),
+    points: pts(s.yearly, m=>m.epf),
+    note:`Contribution scales with your salary; compounding at ${c.epfRate.toFixed(2)}%.` });
+
+  out += stream({ title:"NPS", symbol:"shield.lefthalf.filled", tint:C.safety,
+    now: fmt(plan ? plan.nps : c.npsBal), atLabel:`At ${Math.round(c.retireYear)}`, atValue: fmt(atR.nps),
+    points: pts(s.yearly, m=>m.nps),
+    note:"Contribution scales with salary. Mostly locked until 60, with 40% going to an annuity." });
+
+  out += linkCard("slider.horizontal.3", "Adjust returns and assumptions", "", C.wealth, ()=>go("settings"));
+  return out;
+}
+
+function historyBody(){
+  const h = [...STORE.history].sort((a,b)=> new Date(a.date) - new Date(b.date));
+  const t = d => new Date(d).getFullYear()*12 + new Date(d).getMonth();
+  let out = card(sect("Track record","flame.fill",C.goals)
+    + row("Months tracked", String(h.length))
+    + row("Check-in streak", String(checkInStreak()))
+    + row("On-plan streak", String(onPlanStreak()))
+    + (h.length >= 2 ? row("Net worth change", "+" + fmt(h[h.length-1].netWorth - h[0].netWorth), {em:true}) : ""));
+
+  if (h.length >= 2){
+    out += card(sect("Net worth — actual","chart.line.uptrend.xyaxis",C.wealth)
+      + lineChart([{ name:"Net worth", points: h.map(s=>[t(s.date), s.netWorth]), color:C.wealth }], {height:170, filled:true}));
+    out += card(sect("Invested — actual vs plan","target",C.income)
+      + lineChart([
+          { name:"Actual", points: h.map(s=>[t(s.date), snapLiquid(s)]), color:C.income },
+          { name:"Plan",   points: h.map(s=>[t(s.date), s.planned]), color:C.t3, dashed:true }
+        ], {height:170, legend:true})
+      + note("Green above the dashed line means you're ahead of plan. This gap is your discipline, made visible."));
+  } else {
+    out += card(sect("No history yet","clock.arrow.circlepath",C.t2)
+      + note("Charts appear after your second monthly check-in. Save one each month — that's the whole ritual."), {tight:true});
+  }
+
+  out += [...STORE.history].sort((a,b)=> new Date(b.date) - new Date(a.date)).map(sn => {
+    const d = new Date(sn.date);
+    return card(`<div class="row"><span style="font-size:14px;font-weight:700">${MONTHS[d.getMonth()]} ${d.getFullYear()}</span>`
+      + `<span class="sp"></span>${pill(snapDrift(sn) >= 0 ? "on plan" : "behind " + fmt(-snapDrift(sn)), snapDrift(sn) >= 0 ? C.income : C.goals)}`
+      + `<button onclick="RUN('${H(()=>{ STORE.history = STORE.history.filter(x=>x.id!==sn.id); save(); render(); })}')" style="color:var(--text3);display:flex;margin-left:8px">${icon("trash",15)}</button></div>`
+      + row("Net worth", fmt(sn.netWorth), {em:true})
+      + row("Invested", fmt(snapLiquid(sn)) + " · plan " + fmt(sn.planned))
+      + row("US / India", fmt(sn.us) + " · " + fmt(sn.ind))
+      + row("Loan outstanding", fmt(sn.loanOutstanding)), {tight:true});
+  }).join("");
+  return out;
+}
+
+VIEWS.yearly = () => {
+  const s = sims().plan;
+  const years = s.states.filter(m => m.month === 0).slice(0, 11);
+  const body = years.map(y => {
+    const total = y.ef + y.usV + y.inV + y.epf + y.nps;
+    return card(`<div class="row"><span class="big rnd">${y.year}</span><span class="sp"></span>`
+      + `<span class="num rnd" style="color:${C.wealth}">${esc(fmt(total))}</span></div>`
+      + sect("Income per month","arrow.down.circle.fill",C.income)
+      + row("Take-home", fmt(y.th)) + row("Agartala rent (your share)", fmt(y.agInc))
+      + sect("Portfolio","chart.pie.fill",C.wealth)
+      + row("US stocks", fmt(y.usV), {symbol:"globe.americas.fill", tint:C.wealth})
+      + row("India stocks + MF", fmt(y.inV), {symbol:"globe.asia.australia.fill", tint:C.goals})
+      + row("EPF", fmt(y.epf), {symbol:"building.columns.fill"})
+      + row("NPS", fmt(y.nps), {symbol:"shield.lefthalf.filled"})
+      + row("Emergency fund", fmt(y.ef), {symbol:"lifepreserver.fill", tint:C.safety})
+      + STORE.config.goals.filter(g => (y.goalVal[g.id]||0) > 0)
+          .map(g => row("of which " + g.name, fmt(y.goalVal[g.id]), {symbol:g.symbol, tint: g.bucket==="liquid"?C.goals:C.income})).join("")
+      + sect("Loans","creditcard.fill",C.outgo)
+      + row("Personal", y.pl > 0 ? fmt(y.pl) : "closed", {tint: y.pl>0?C.outgo:C.income})
+      + row("Chennai", y.ch > 0 ? fmt(y.ch) : "closed", {tint: y.ch>0?C.outgo:C.income})
+      + row("Agartala (family)", y.ag > 0 ? fmt(y.ag) : "closed", {tint: y.ag>0?C.outgo:C.income})
+      + STORE.config.goals.filter(g => (y.goalLoan[g.id]||0) > 0)
+          .map(g => row(g.name + " loan", fmt(y.goalLoan[g.id]))).join(""));
+  }).join("");
+  return { title:"Year by year", body };
+};
+
+/* ---------------- INSIGHTS ---------------- */
+VIEWS.insights = () => {
+  const c = STORE.config, a = STORE.actuals;
+  const sim = sims().plan;
+  const plan = sim.planNow();
+  const th = plan ? plan.th : c.income;
+  const exp = (plan ? plan.exp : c.rentExp + c.livingExp) + (plan ? plan.wifeExp : c.wifeExp);
+  const passive = (plan ? plan.agInc : 0) + (plan ? plan.chRent : c.chennaiRent);
+  const emis = (a.plOutstanding > 0 ? c.plEMI : 0) + (c.chBal > 0 ? c.chEMI : 0);
+  const burn = exp + emis;
+  const netBurn = Math.max(1, burn - passive);
+  const n = netWorthOf(a, c, STORE.cards);
+  const runway = n.liquid / netBurn;
+  const target = c.efMonths * netBurn;
+  const savingsRate = (plan ? plan.surplus : 0) / Math.max(1, th) * 100;
+  const emiBurden = emis / Math.max(1, th) * 100;
+  const reConc = (n.net > 0 ? n.hard / n.net : 0) * 100;
+  const funded = sim.need > 0 ? sim.retAssets / sim.need * 100 : 100;
+  const runwayTint = runway >= 6 ? C.income : runway >= 3 ? C.goals : C.danger;
+
+  const metric = (label, value, good, suffix) =>
+    `<div class="row"><span style="color:${good?C.income:C.goals};display:flex">${icon(good?"checkmark.circle.fill":"exclamationmark.triangle.fill",14)}</span>`
+    + `<span class="lbl">${esc(label)}</span><span class="sp"></span>`
+    + `<span class="val">${value.toFixed(0)}${esc(suffix)}</span></div>`;
+
+  const list = (title, tint, symbol, items) => card(sect(title, symbol, tint)
+    + items.map(i => `<div class="row" style="align-items:flex-start">`
+      + `<span style="color:${i.good?C.income:C.goals};display:flex;padding-top:2px">${icon(i.good?"checkmark.circle.fill":"exclamationmark.triangle.fill",14)}</span>`
+      + `<div style="flex:1"><div style="font-size:13px;font-weight:600">${esc(i.title)}</div>`
+      + `<div class="note">${esc(i.detail)}</div></div></div>`).join(""));
+
+  const multiple = a.termSelf / Math.max(1, th*12);
+  const recommended = 10*th*12 + a.plOutstanding + c.chBal;
+
+  const strengths = [];
+  if (savingsRate >= 15) strengths.push({good:true, title:`Strong savings rate (${savingsRate.toFixed(0)}%)`,
+    detail:"You out-save most households, and it climbs further once the personal loan closes and Agartala rent starts."});
+  strengths.push({good:true, title:"A second income leg is coming",
+    detail:"Your Agartala rental share ramps from mid-2027 and grows 15% every three years — income that doesn't depend on your job."});
+  if (emiBurden < 30) strengths.push({good:true, title:`Healthy EMI burden (${emiBurden.toFixed(0)}%)`,
+    detail:"Comfortably under the 40% danger zone, and shrinking as loans close."});
+  if (funded >= 100) strengths.push({good:true, title:"Retirement target is reachable",
+    detail:"Projected assets cover the corpus needed — conditional on Agartala rents and disciplined monthly investing."});
+  strengths.push({good:true, title:"Real estate has compounded well",
+    detail:"Chennai went ₹62L → ₹95L since 2018 alongside rental income, and it collateralises future flexibility."});
+
+  const watch = [];
+  if (runway < 6) watch.push({good:false, title:`Runway is only ${runway.toFixed(1)} months`,
+    detail:`The plan handles this first, but until the fund is built you're exposed. ${fmt(Math.max(0, target - n.liquid))} to go.`});
+  if (reConc > 60) watch.push({good:false, title:`${reConc.toFixed(0)}% of net worth is real estate`,
+    detail:"Illiquid and geographically concentrated across Chennai and Agartala — it can't be sold quickly or partially."});
+  if (n.stocksPct < 10) watch.push({good:false, title:"Stocks are far from your 60% goal",
+    detail:`Currently ${n.stocksPct.toFixed(1)}%. Until this shifts, your wealth grows at real-estate pace rather than equity pace.`});
+  watch.push({good:false, title:"Single earning member until mid-2027",
+    detail:"Your salary funds everything until the Agartala rent starts. Term cover is the main gap to close."});
+  watch.push({good:false, title:"The plan leans on Agartala executing",
+    detail:"₹3.5L rent by 2028 and loan closure carry the retirement maths. Update the numbers as floors get tenanted."});
+
+  const body = [
+    card(sect("If you lose your job tomorrow","lifepreserver.fill",runwayTint)
+      + `<div style="display:flex;align-items:baseline;gap:6px"><span class="hero rnd" style="color:${runwayTint}">${runway.toFixed(1)}</span>`
+      + `<span style="font-size:13px;color:var(--text2)">months of runway</span></div>`
+      + progress(runway/6, runwayTint)
+      + row("Liquid funds", fmt(n.liquid), {symbol:"drop.fill", tint:C.safety})
+      + row("Monthly outgo", fmt(burn), {symbol:"arrow.up.circle.fill", tint:C.outgo})
+      + row("Offset by rentals", "− " + fmt(passive), {symbol:"arrow.down.circle.fill", tint:C.income})
+      + row("Net burn", fmt(netBurn), {em:true})
+      + row(`Gap to ${Math.round(c.efMonths)}-month target`, fmt(Math.max(0, target - n.liquid)))
+      + note(`The plan builds this buffer first — ${Math.round(c.efSplit)}% of surplus plus the January bonus, funded by ${monthName(sim.efDone)}. EPF becomes partially withdrawable after 1–2 months of unemployment; Chennai rent keeps covering your wife's expenses.`)),
+
+    card(sect("Insurance cover","shield.lefthalf.filled",C.safety)
+      + row("Health — personal floater", fmt(a.healthPersonal), {symbol:"cross.case.fill", tint:C.safety})
+      + row("Health — employer", fmt(a.healthEmployer), {symbol:"briefcase.fill"})
+      + row("Term life — you", fmt(a.termSelf) + `  (${multiple.toFixed(1)}×)`, {symbol:"person.fill", tint: multiple < 10 ? C.goals : C.income})
+      + row("Term life — wife", fmt(a.termSpouse), {symbol:"person.fill"})
+      + note(a.healthPersonal >= 2000000
+          ? "Health cover is strong for a family of three — and it's the one that matters, since employer cover vanishes with the job."
+          : "Personal health cover below ₹20L is thin for a family of three in a metro. Employer cover doesn't count — it disappears with the job.")
+      + (multiple < 10 ? `<div class="note" style="color:${C.goals}">Term cover is only ${multiple.toFixed(1)}× your annual income. The guideline is 10–15× income plus liabilities ≈ ${esc(fmt(recommended))}. A top-up now is inexpensive and locks in today's health status.</div>` : "")),
+
+    card(sect("Financial health","heart.text.square.fill",C.wealth)
+      + metric("Savings rate", savingsRate, savingsRate >= 20, "% of take-home")
+      + metric("EMI burden", emiBurden, emiBurden < 30, "% of take-home")
+      + metric("Real-estate concentration", reConc, reConc < 60, "% of net worth")
+      + metric("Stocks share", n.stocksPct, n.stocksPct >= 30, "% (goal 60%)")
+      + metric("Passive income covers", passive/Math.max(1,exp)*100, passive/Math.max(1,exp) > 0.3, "% of expenses")
+      + metric(`Retirement ${Math.round(c.retireYear)} funded`, funded, funded >= 100, "%")),
+
+    list("Strengths", C.income, "checkmark.seal.fill", strengths),
+    list("Watch-outs", C.goals, "exclamationmark.triangle.fill", watch)
+  ].join("");
+  return { title:"Insights", body };
+};
+/* =========================================================
+   DETAIL SCREENS
+   ========================================================= */
+const heroCard = (value, caption, symbol, tint) =>
+  card(sect(caption, symbol, tint) + `<div class="hero rnd" style="color:${tint}">${esc(value)}</div>`, {tight:true});
+const factsCard = rows => card(rows.map(r => row(r[0], r[1])).join(""));
+const timelineCard = (title, rows) => card(sect(title, "calendar", C.t2)
+  + rows.slice(0,24).map(r => row(r[0], r[1])).join(""));
+const explainCard = text => card(sect("How it works","info.circle",C.t2) + note(text), {tight:true});
+
+VIEWS.networth = () => {
+  const c = STORE.config, a = STORE.actuals;
+  const n = netWorthOf(a, c, STORE.cards);
+  const hist = [...STORE.history].sort((x,y)=> new Date(x.date)-new Date(y.date));
+  const prev = hist.length >= 2 ? hist[hist.length-2] : null;
+  const group = (title, subtotal, ofTotal, tint, rows) =>
+    `<div class="inset"><div class="row"><span style="font-size:12px;font-weight:700;color:${tint}">${esc(title)}</span>`
+    + `<span class="sp"></span><span style="font-size:11px;font-weight:600;color:var(--text2)">${esc(fmt(subtotal))} · ${Math.round(ofTotal>0?subtotal/ofTotal*100:0)}%</span></div>`
+    + rows.map(r => row(r[0], fmt(r[1]), {symbol:r[2], tint})).join("") + `</div>`;
+
+  const body = [
+    card(sect("Net worth today","chart.pie.fill",C.wealth)
+      + `<div class="hero rnd" style="color:${C.wealth}">${esc(fmt(n.net))}</div>`
+      + (prev ? `<div style="display:flex;align-items:center;gap:5px;font-size:12px;color:${n.net - prev.netWorth >= 0 ? C.income : C.outgo}">`
+          + `${n.net - prev.netWorth >= 0 ? "↗" : "↘"} ${esc((n.net-prev.netWorth>=0?"+":"") + fmt(n.net-prev.netWorth))} since ${MONTHS[new Date(prev.date).getMonth()]} ${new Date(prev.date).getFullYear()}</div>` : "")
+      + `<div class="note t3">Assets ${esc(fmt(n.assets))}  −  Liabilities ${esc(fmt(n.liabilities))}</div>`, {tight:true}),
+
+    card(sect("How it splits","square.stack.3d.up.fill",C.wealth)
+      + splitBar([["Liquid — investable today", n.liquid, C.safety, "drop.fill"],
+                  ["Locked — EPF + NPS", n.locked, C.wealth, "lock.fill"],
+                  ["Hard — property, vehicle", n.hard, C.goals, "house.fill"]])),
+
+    card(sect("Assets","plus.circle.fill",C.income)
+      + group("Liquid", n.liquid, n.assets, C.safety, [
+          ["US stocks", n.us, "globe.americas.fill"], ["India stocks + MF", n.ind, "globe.asia.australia.fill"],
+          ["Emergency fund", n.emergency, "lifepreserver.fill"], ["Goal savings (liquid)", n.goalSavings, "target"]])
+      + group("Locked until retirement", n.locked, n.assets, C.wealth, [
+          ["EPF", n.epf, "building.columns.fill"], ["NPS", n.nps, "shield.lefthalf.filled"]])
+      + group("Hard assets", n.hard, n.assets, C.goals, [
+          ["Chennai property", n.chennai, "house.fill"], ["Agartala share", n.agartala, "building.2.fill"],
+          ["Vehicle", n.vehicle, "car.2.fill"]])
+      + divider() + row("Total assets", fmt(n.assets), {tint:C.income, em:true})),
+
+    card(sect("Liabilities","minus.circle.fill",C.outgo)
+      + row("Personal loan", fmt(n.personalLoan), {symbol:"creditcard.fill", tint:C.outgo})
+      + row("Chennai home loan", fmt(n.chennaiLoan), {symbol:"house.fill", tint:C.outgo})
+      + row("Credit card dues", fmt(n.cardDues), {symbol:"creditcard.and.123", tint:C.outgo})
+      + divider() + row("Total liabilities", fmt(n.liabilities), {tint:C.outgo, em:true})),
+
+    card(sect("The sum","function",C.t2)
+      + row("Assets", fmt(n.assets), {tint:C.income})
+      + row("Liabilities", "− " + fmt(n.liabilities), {tint:C.outgo})
+      + divider() + row("Net worth", fmt(n.net), {tint:C.wealth, em:true})),
+
+    card(sect("What this tells you","lightbulb.fill",C.goals)
+      + row("Liquid share", (n.net>0?n.liquid/n.net*100:0).toFixed(1) + "% of net worth")
+      + row("Real estate share", (n.net>0?n.hard/n.net*100:0).toFixed(1) + "% of net worth")
+      + row("Stocks share (goal 60%)", n.stocksPct.toFixed(1) + "%")
+      + progress(n.stocksPct/60, C.income)
+      + note(n.hard/Math.max(1,n.net) > 0.6
+          ? "Most of your wealth is in property — it compounds, but it can't be sold in a hurry or in parts. That's why the liquid buffer and the equity build-up matter more than the headline number."
+          : "Your mix is reasonably balanced between liquid and hard assets.")),
+
+    card(sect("What's not counted","info.circle",C.t2)
+      + note("The ₹1.5Cr Agartala construction loan is excluded because it's a joint family liability serviced by that property's own rental income, not from your salary. For the same reason, only your share of that property counts as an asset.\n\nEPF and NPS are included as assets even though they're locked, since they genuinely fund retirement. Property values only change when you update them; everything else moves with your monthly check-in."), {tight:true})
+  ].join("");
+  return { title:"Net worth", body };
+};
+
+VIEWS.impact = () => {
+  const c = STORE.config, a = STORE.actuals;
+  const { plan: planSim, real: realSim } = sims();
+  const impacts = goalImpacts(planSim, realSim, c);
+  const bd = driftBreakdown(planSim.planNow(), c, a);
+  const drift = bd.drift, ahead = drift >= 0;
+  const hurt = impacts.filter(i => i.worse && i.deltaText).length;
+
+  const extra = VIEWS.impact._extra || 0;
+  let catchImpacts = null;
+  if (extra > 0){
+    const cc = Object.assign({}, c, { extraSavings: c.extraSavings + extra });
+    const catchSim = simulate(cc, a.usValue, a.inValue, actualsOverride(a, c.goals));
+    catchImpacts = goalImpacts(planSim, catchSim, c);
+  }
+  const setExtra = v => { VIEWS.impact._extra = parseFloat(v)||0; render(); };
+
+  const body = [
+    card(sect(ahead ? "You're ahead" : "You're behind",
+        ahead ? "arrow.up.right.circle.fill" : "arrow.down.right.circle.fill", ahead ? C.income : C.goals)
+      + `<div class="hero rnd" style="color:${ahead?C.income:C.goals}">${esc(fmt(Math.abs(drift)))}</div>`
+      + note(deviationSummary(drift, impacts)), {tight:true}),
+
+    card(sect("Every goal, plan vs reality","arrow.left.arrow.right",C.wealth)
+      + impacts.map(g => `<div class="inset">`
+        + `<div class="row"><span style="color:${C.wealth};display:flex">${icon(g.symbol)}</span>`
+        + `<span style="font-size:13px;font-weight:600">${esc(g.name)}</span><span class="sp"></span>`
+        + (g.deltaText ? pill(g.deltaText, g.worse ? C.danger : C.income) : pill("unchanged", C.t2)) + `</div>`
+        + `<div class="row"><span class="note t3">Plan: ${esc(g.planText)}</span><span class="sp"></span>`
+        + `<span style="font-size:11.5px;font-weight:600;color:${!g.deltaText?C.t2:(g.worse?C.danger:C.income)}">Now: ${esc(g.realText)}</span></div></div>`).join("")),
+
+    card(sect("What would fix it","slider.horizontal.3",C.income)
+      + note(extra > 0 ? `Saving ${fmt(extra)} extra every month:` : "Drag to see what extra monthly saving would do.")
+      + `<input type="range" min="0" max="100000" step="2500" value="${extra}" onchange="RUNV('${H(setExtra)}', this.value)">`
+      + `<div class="row"><span class="note t3">₹0</span><span class="sp"></span>`
+      + `<span class="num rnd" style="color:${C.income}">${esc(fmt(extra))}</span><span class="sp"></span><span class="note t3">₹1L</span></div>`
+      + (catchImpacts ? divider()
+          + catchImpacts.map(g => row(g.name, g.deltaText || "back on plan",
+              {symbol:g.symbol, tint: !g.deltaText ? C.income : (g.worse ? C.goals : C.income)})).join("")
+          + note("Compared against the original plan. “Back on plan” means the extra saving fully absorbs the deviation for that goal.")
+          + `<div class="addbtn center" style="background:${C.income};color:#fff;justify-content:center" onclick="RUN('${H(()=>{ STORE.config.extraSavings += extra; VIEWS.impact._extra = 0; save(); render(); })}')">Commit ${esc(fmt(extra))}/month to the plan</div>`
+        : "")),
+
+    card(sect("Deviation alerts","bell.badge.fill",C.goals)
+      + fld("Notify me when drift exceeds", ()=>c.driftAlert, v=>c.driftAlert=v, {min:0,max:200000,step:2500})
+      + note(c.driftAlert > 0
+          ? `When a check-in shows drift beyond ${fmt(c.driftAlert)}, the app flags which goal moved and by how much.`
+          : "Alerts are off. Set a threshold above zero to be told when goals start slipping.")),
+
+    c.extraSavings > 0 ? card(sect("Committed extra saving","checkmark.seal.fill",C.income)
+      + fld("Extra per month", ()=>c.extraSavings, v=>c.extraSavings=v, {min:0,max:200000,step:2500})
+      + note("This is added to every month's surplus across the whole app. Set it back to zero if it stops being realistic — an over-optimistic plan is worse than an honest one."), {tight:true}) : "",
+
+    card(sect("How this is calculated","function",C.t2)
+      + note(`Two simulations run side by side. The plan is the original trajectory from August 2026. Reality replays that same plan up to this month, then restarts from your actual balances — loan outstanding, emergency fund, equity, EPF and NPS — and projects forward. The difference between the two is what your deviation costs.\n\n${hurt === 0 ? "No goal has moved yet." : hurt + " goal" + (hurt === 1 ? " has" : "s have") + " moved."} Accuracy depends entirely on your last check-in being current.`), {tight:true})
+  ].join("");
+  return { title:"Impact of deviation", body };
+};
+
+VIEWS.drift = () => {
+  const c = STORE.config, a = STORE.actuals;
+  const s = sims().plan;
+  const plan = s.planNow();
+  const bd = driftBreakdown(plan, c, a);
+  const ahead = bd.drift >= 0;
+  const monthlyBuild = plan ? plan.actEF + plan.goalContribTotal + plan.actRet : 0;
+
+  const body = [
+    card(sect(ahead ? "Ahead of plan" : "Behind plan",
+        ahead ? "checkmark.circle.fill" : "exclamationmark.triangle.fill", ahead ? C.income : C.goals)
+      + `<div class="hero rnd" style="color:${ahead?C.income:C.goals}">${esc(fmt(Math.abs(bd.drift)))}</div>`
+      + note(`What you actually hold, minus what the plan expects you to have accumulated by ${monthName(plan ? plan.idx : null)}.`), {tight:true}),
+
+    card(sect("The plan expects","target",C.wealth)
+      + row("Emergency fund", fmt(bd.planEF), {symbol:"lifepreserver.fill", tint:C.safety})
+      + bd.goalRows.map(g => row(g.name, fmt(g.planned), {symbol:"target", tint:C.goals})).join("")
+      + row("Retirement equity", fmt(bd.planRet), {symbol:"beach.umbrella.fill", tint:C.wealth})
+      + (bd.commonFundAdj > 0 ? row("less common-fund lump (not yours yet)", "− " + fmt(bd.commonFundAdj)) : "")
+      + divider() + row("Planned total", fmt(bd.planned), {em:true})),
+
+    card(sect("You actually hold","wallet.bifold.fill",C.income)
+      + row("US stocks", fmt(bd.actUS), {symbol:"globe.americas.fill", tint:C.wealth})
+      + row("India stocks + MF", fmt(bd.actIN), {symbol:"globe.asia.australia.fill", tint:C.goals})
+      + row("Emergency fund (FD + savings)", fmt(bd.actEF), {symbol:"lifepreserver.fill", tint:C.safety})
+      + row("Goal savings (liquid)", fmt(bd.actGoalsLiquid), {symbol:"target", tint:C.goals})
+      + divider() + row("Actual total", fmt(bd.actual), {em:true})),
+
+    card(sect("The sum","function",C.t2)
+      + row("Actual", fmt(bd.actual)) + row("Planned", "− " + fmt(bd.planned)) + divider()
+      + row("Drift", (ahead?"+":"") + fmt(bd.drift), {tint: ahead?C.income:C.goals, em:true})),
+
+    card(sect("Why the loan isn't in this number","creditcard.fill",C.outgo)
+      + row("Loan balance — plan", fmt(bd.loanPlanned))
+      + row("Loan balance — actual", fmt(bd.loanActual))
+      + row(bd.loanDrift <= 0 ? "Ahead on the loan by" : "Behind on the loan by", fmt(Math.abs(bd.loanDrift)),
+            {tint: bd.loanDrift <= 0 ? C.income : C.goals, em:true})
+      + note("Most of your surplus right now goes to loan prepayment, which reduces debt rather than building an asset — so it doesn't appear in the drift figure above. Both matter: drift tracks what you own, this tracks what you owe. Your net worth on the home screen already nets the two.")),
+
+    linkCard("arrow.left.arrow.right", "What is this costing me?", "See how each goal date shifts", C.goals, ()=>go("impact")),
+
+    card(sect(ahead ? "Keep it up" : "How to close the gap","arrow.right.circle.fill", ahead ? C.income : C.goals)
+      + note(ahead
+          ? "You're holding more than the plan requires. Nothing to fix — keep saving the check-in each month so the streak and history build up."
+          : `The plan assumes you started investing in August 2026. Until you actually begin, this gap grows by roughly ${fmt(monthlyBuild)} a month.\n\nTwo ways to close it: put ${fmt(Math.abs(bd.drift))} into your emergency fund to catch up in one go, or accept the later dates — every goal will re-date itself once you update your real balances at the next check-in.`), {tight:true})
+  ].join("");
+  return { title:"Drift explained", body };
+};
+
+VIEWS.emergency = () => {
+  const c = STORE.config, a = STORE.actuals;
+  const s = sims().plan;
+  const plan = s.planNow();
+  const body = [
+    heroCard(fmt(plan ? plan.efTarget : 0), `Target — ${Math.round(c.efMonths)} months of net burn`, "lifepreserver.fill", C.safety),
+    factsCard([["Built so far (plan)", fmt(plan ? plan.ef : 0)], ["Your actual", fmt(a.fdSavings)],
+               ["Fully funded by", monthName(s.efDone)]]),
+    card(lineChart([{ name:"Emergency fund", points: pts(s.states.slice(0,36), m=>m.ef), color:C.safety }],
+      { height:150, filled:true, rule: plan ? plan.efTarget : null })),
+    card(sect("Adjust","slider.horizontal.3",C.safety)
+      + fld("Months of cover", ()=>c.efMonths, v=>c.efMonths=v, {min:0,max:12,step:1})
+      + fld("Share of surplus while building", ()=>c.efSplit, v=>c.efSplit=v, {min:0,max:100,step:5,suffix:"%"})),
+    timelineCard("Month by month", s.states.filter(m=>m.actEF>0).map(m => [monthName(m.idx), `+${fmt(m.actEF)} → ${fmt(m.ef)}`])),
+    explainCard(`This is funded before anything else. The target is ${Math.round(c.efMonths)} × (expenses + EMIs − rental income), so it shrinks as your rental income grows. Park it in a liquid fund or sweep-in FD — never equity.`)
+  ].join("");
+  return { title:"Emergency fund", body };
+};
+
+VIEWS.loanPayoff = () => {
+  const c = STORE.config, a = STORE.actuals;
+  const s = sims().plan;
+  const plan = s.planNow();
+  const body = [
+    heroCard(fmt(a.plOutstanding), "Outstanding today", "creditcard.fill", C.outgo),
+    factsCard([["Planned outstanding", fmt(plan ? plan.pl : 0)], ["Closes", monthName(s.plDone)],
+               ["Interest till close", fmt(s.intPL)], ["Rate", c.plRate.toFixed(1)+"%"]]),
+    card(lineChart([{ name:"Balance", points: pts(s.states.slice(0,30), m=>m.pl), color:C.outgo }], {height:150, filled:true})),
+    timelineCard("Month by month", s.states.filter(m=>m.actPL>0).map(m => [monthName(m.idx), `pay ${fmt(m.actPL + c.plEMI)} → ${fmt(m.pl)}`])),
+    explainCard(`EMI plus whatever surplus is left after the emergency-fund slice. Once that fund is full, the entire surplus hits this loan — a guaranteed ${Math.round(c.plRate)}% return, which is why no goal funding starts until it's gone.`)
+  ].join("");
+  return { title:"Personal loan", body };
+};
+
+VIEWS.retirement = () => {
+  const c = STORE.config;
+  const s = sims().plan;
+  const funded = s.need > 0 ? s.retAssets / s.need * 100 : 100;
+  const body = [
+    heroCard(Math.round(funded) + "%", `Funded for ${Math.round(c.retireYear)}`, "beach.umbrella.fill", C.wealth),
+    factsCard([["Corpus needed", fmt(s.need)], ["Projected", fmt(s.retAssets)],
+               ["— Equity bucket", fmt(s.atRetire.ret)], ["— EPF", fmt(s.atRetire.epf)], ["— NPS", fmt(s.atRetire.nps)],
+               ["Expenses then", fmt(s.expThen)+"/mo"], ["Agartala income then", fmt(s.rentalIncome)+"/mo"]]),
+    card(lineChart([{ name:"Retirement assets", points: pts(s.yearly, m=>m.ret+m.epf+m.nps), color:C.wealth }],
+      {height:150, filled:true, rule:s.need})),
+    card(sect("Adjust","slider.horizontal.3",C.wealth)
+      + fld("Retirement year", ()=>c.retireYear, v=>c.retireYear=v, {min:2030,max:2050,step:1})
+      + fld("Safe withdrawal rate", ()=>c.swr, v=>c.swr=v, {min:2,max:8,step:0.25,suffix:"%"})),
+    explainCard(`Retirement absorbs whatever is left after the emergency fund, the loan and every goal above it. At ${Math.round(c.retireYear)} your expenses inflate to ${fmt(s.expThen)}/mo and Agartala rent covers ${fmt(s.rentalIncome)}/mo; the gap × 12 ÷ ${c.swr.toFixed(0)}% = ${fmt(s.need)} needed.`),
+    linkCard("sunset.fill", "See the 10 years after retirement", "", C.goals, ()=>go("postRet"))
+  ].join("");
+  return { title:"Retirement", body };
+};
+
+VIEWS.postRet = () => {
+  const c = STORE.config;
+  const s = sims().plan;
+  const retYear = Math.round(c.retireYear);
+  const rows = [];
+  let corp = s.retAssets;
+  for (let i=0;i<10;i++){
+    const y = retYear + i;
+    const exp = (c.rentExp + c.livingExp) * Math.pow(1 + c.expInflation/100, y - 2026);
+    const agOpen = s.agDone !== null ? (y*12 < s.agDone) : true;
+    const rentNet = agRent(y, 0) * (1 - c.agMaint/100) - (agOpen ? c.agEMI : 0);
+    const rent = Math.max(0, rentNet * c.agShare / 100);
+    const draw = Math.max(0, exp - rent) * 12;
+    corp = corp * (1 + c.postRetReturn/100) - draw;
+    rows.push({ y, exp, rent, draw, corp });
+  }
+  const endCorpus = rows[rows.length-1].corp;
+  const growing = endCorpus > s.retAssets;
+  const depleted = rows.find(r => r.corp <= 0);
+
+  const body = [
+    card(sect("Verdict","sunset.fill",C.goals)
+      + `<div class="big rnd" style="color:${depleted ? C.danger : growing ? C.income : C.goals}">`
+      + esc(depleted ? `Corpus runs out in ${depleted.y}` : growing ? "Corpus grows while you spend it" : `Corpus lasts beyond ${retYear+10}`) + `</div>`
+      + row(`Starting corpus (${retYear})`, fmt(s.retAssets)) + row("After 10 years", fmt(endCorpus)), {tight:true}),
+    card(sect("Corpus over the decade","chart.bar.fill",C.wealth)
+      + barChart(rows.map(r => ({ label:String(r.y).slice(2), value:Math.max(0,r.corp),
+          color: r.corp > s.retAssets ? C.income : C.wealth })), {height:180})),
+    card(sect("Post-retirement return","dial.medium",C.t2)
+      + fld("Assumed return", ()=>c.postRetReturn, v=>c.postRetReturn=v, {min:5,max:14,step:0.5,suffix:"%"})
+      + note("Lower than your accumulation-phase return — portfolios usually shift toward safety at retirement.")),
+    rows.map(r => card(`<div style="font-size:15px;font-weight:700">${r.y}</div>`
+      + row("Expenses", fmt(r.exp)+"/mo", {symbol:"arrow.up.circle.fill", tint:C.outgo})
+      + row("Agartala rent", fmt(r.rent)+"/mo", {symbol:"arrow.down.circle.fill", tint:C.income})
+      + row("Withdrawn from corpus", fmt(r.draw)+"/yr", {symbol:"minus.circle.fill"})
+      + row("Corpus at year end", fmt(r.corp), {em:true}), {tight:true})).join(""),
+    card(sect("Notes","info.circle",C.t2)
+      + note("Rent keeps growing while withdrawals shrink in real terms — that's why the corpus can grow even in retirement. Goal money is excluded (it's already spoken for). NPS is mostly locked until 60 with 40% going to an annuity; EPF is accessible at retirement."), {tight:true})
+  ].join("");
+  return { title:"After retirement", body };
+};
+
+VIEWS.goalDetail = (props) => {
+  const c = STORE.config;
+  const g = c.goals.find(x => x.id === props.id);
+  if (!g) return { title:"Goal", body: card(sect("Goal deleted","trash",C.t2) + note("This goal is no longer in your plan."), {tight:true}) };
+  const s = sims().plan;
+  const plan = s.planNow();
+  const tint = g.bucket === "liquid" ? C.goals : C.income;
+  const val = plan ? (plan.goalVal[g.id] || 0) : 0;
+  const projected = s.finalValue(g.id);
+  const emi = s.goalLoanEMI[g.id] || 0;
+
+  let expl = `${fmt(g.monthly)} a month`;
+  if (g.stepUpPct > 0) expl += `, rising ${Math.round(g.stepUpPct)}% a year`;
+  expl += g.afterDebtFree ? `, starting once the personal loan closes (${monthName(s.plDone)}).` : ", starting immediately.";
+  expl += g.bucket === "liquid"
+    ? " Held in a liquid fund or FD, because short-horizon money shouldn't ride market swings."
+    : ` Invested in equity (${Math.round(c.usAlloc)}% US / ${Math.round(100-c.usAlloc)}% India).`;
+  if (financed(g) > 0)
+    expl += ` You save only the ${Math.round(g.downPct)}% upfront share (${fmt(fundedTarget(g))}) and finance ${fmt(financed(g))} at ${g.loanRate.toFixed(1)}% — worth it while your investments are expected to out-earn the loan.`;
+
+  const body = [
+    heroCard(fmt(g.target), `Target by ${Math.round(g.targetYear)}`, g.symbol, tint),
+    factsCard([
+      ["Must be saved", fmt(fundedTarget(g)) + (financed(g) > 0 ? ` (${Math.round(g.downPct)}% upfront)` : "")],
+      ["Financed", financed(g) > 0 ? `${fmt(financed(g))} @ ${g.loanRate.toFixed(1)}%` : "none"],
+      ["EMI once bought", emi > 0 ? `${fmt(emi)}/mo × ${Math.round(g.loanYears)}y` : "—"],
+      ["Saved so far (plan)", fmt(val)], ["Your actual", fmt(g.actual)],
+      ["Monthly", fmt(g.monthly) + (g.stepUpPct > 0 ? ` +${Math.round(g.stepUpPct)}%/yr` : "")],
+      ["Held in", g.bucket === "liquid" ? "Liquid / FD" : "Equity"],
+      ["Funded", monthName(s.goalFunded[g.id])], ["Projected at end", fmt(projected)]]),
+    card(lineChart([{ name:g.name, points: pts(s.states.filter(m=>m.month%2===0), m => m.goalVal[g.id]||0), color:tint }],
+      {height:150, filled:true, rule:fundedTarget(g)})),
+    timelineCard("Contributions", s.states.filter(m => (m.goalContrib[g.id]||0) > 0)
+      .map(m => [monthName(m.idx), `+${fmt(m.goalContrib[g.id])} → ${fmt(m.goalVal[g.id]||0)}`])),
+    explainCard(expl),
+    `<div class="addbtn" onclick="RUN('${H(()=>editGoal(g, false))}')">${icon("pencil",18)}<span>Edit this goal</span></div>`,
+    `<div class="addbtn danger" onclick="RUN('${H(()=>{ if(confirm("Delete "+g.name+"?")){ STORE.config.goals = c.goals.filter(x=>x.id!==g.id); save(); back(); } })}')">${icon("trash",18)}<span>Delete this goal</span></div>`
+  ].join("");
+  return { title:g.name, body };
+};
+
+/* ---------------- SETTINGS ---------------- */
+VIEWS.settings = () => {
+  const c = STORE.config, a = STORE.actuals;
+  const grp = (title, inner, footer) => card(sect(title) + inner + (footer ? note(footer) : ""));
+  const themeIdx = { system:0, light:1, dark:2 }[STORE.theme] || 0;
+
+  const body = [
+    grp("Appearance",
+      segmented(["System","Light","Dark"], themeIdx, i => { STORE.theme = ["system","light","dark"][i]; applyTheme(); save(); render(); })
+      + toggle("Hide all amounts", ()=>STORE.privacy, v=>{ STORE.privacy = v; PRIVACY = v; })),
+
+    grp("Income",
+      fld("Take-home per month", ()=>c.income, v=>c.income=v, {min:100000,max:1000000,step:5000})
+      + fld("Annual hike", ()=>c.hikeAnnual, v=>c.hikeAnnual=v, {min:0,max:30,step:0.5,suffix:"%"})
+      + fld("Switch-year hike", ()=>c.hikeSwitch, v=>c.hikeSwitch=v, {min:0,max:50,step:1,suffix:"%"})
+      + fld("Annual bonus", ()=>c.bonus, v=>c.bonus=v, {min:0,max:1000000,step:25000})),
+
+    grp("Expenses",
+      fld("House rent + maintenance", ()=>c.rentExp, v=>c.rentExp=v, {min:0,max:100000,step:1000})
+      + fld("Household living", ()=>c.livingExp, v=>c.livingExp=v, {min:25000,max:400000,step:5000})
+      + fld("Wife's expenses", ()=>c.wifeExp, v=>c.wifeExp=v, {min:0,max:150000,step:2500})
+      + fld("Chennai rent received", ()=>c.chennaiRent, v=>c.chennaiRent=v, {min:0,max:150000,step:2500})
+      + fld("Inflation", ()=>c.expInflation, v=>c.expInflation=v, {min:0,max:15,step:0.5,suffix:"%"})),
+
+    grp("Expected returns",
+      fld("US stocks XIRR", ()=>c.usReturn, v=>c.usReturn=v, {min:0,max:30,step:0.5,suffix:"%"})
+      + fld("India stocks return", ()=>c.inReturn, v=>c.inReturn=v, {min:0,max:30,step:0.5,suffix:"%"})
+      + fld("US allocation", ()=>c.usAlloc, v=>c.usAlloc=v, {min:0,max:100,step:5,suffix:"%"})
+      + fld("Liquid / FD return", ()=>c.liquidRet, v=>c.liquidRet=v, {min:3,max:9,step:0.25,suffix:"%"})
+      + fld("Post-retirement return", ()=>c.postRetReturn, v=>c.postRetReturn=v, {min:5,max:14,step:0.5,suffix:"%"})),
+
+    grp("Retirement accounts",
+      fld("EPF balance", ()=>c.epfBal, v=>c.epfBal=v, {min:0,max:10000000,step:50000})
+      + fld("EPF monthly", ()=>c.epfMonthly, v=>c.epfMonthly=v, {min:0,max:100000,step:1000})
+      + fld("EPF rate", ()=>c.epfRate, v=>c.epfRate=v, {min:5,max:12,step:0.25,suffix:"%"})
+      + fld("NPS balance", ()=>c.npsBal, v=>c.npsBal=v, {min:0,max:5000000,step:50000})
+      + fld("NPS monthly", ()=>c.npsMonthly, v=>c.npsMonthly=v, {min:0,max:100000,step:1000})
+      + fld("NPS return", ()=>c.npsRate, v=>c.npsRate=v, {min:5,max:15,step:0.25,suffix:"%"})),
+
+    grp("Safety",
+      fld("Emergency fund", ()=>c.efMonths, v=>c.efMonths=v, {min:0,max:12,step:1,suffix:"months"})
+      + fld("Surplus to fund while building", ()=>c.efSplit, v=>c.efSplit=v, {min:0,max:100,step:5,suffix:"%"})),
+
+    grp("Deviation",
+      fld("Extra saving per month", ()=>c.extraSavings, v=>c.extraSavings=v, {min:0,max:200000,step:2500})
+      + fld("Alert when drift exceeds", ()=>c.driftAlert, v=>c.driftAlert=v, {min:0,max:200000,step:2500}),
+      "Extra saving is added to every month's surplus."),
+
+    grp("Retirement",
+      fld("Retirement year", ()=>c.retireYear, v=>c.retireYear=v, {min:2030,max:2050,step:1})
+      + fld("Safe withdrawal rate", ()=>c.swr, v=>c.swr=v, {min:2,max:8,step:0.25,suffix:"%"}),
+      "Everything else — car, education, property, anything you add — lives in the Goals tab."),
+
+    grp("Loans",
+      fld("Personal loan rate", ()=>c.plRate, v=>c.plRate=v, {min:8,max:20,step:0.25,suffix:"%"})
+      + fld("Personal loan EMI", ()=>c.plEMI, v=>c.plEMI=v, {min:0,max:100000,step:1000})
+      + fld("Chennai balance", ()=>c.chBal, v=>c.chBal=v, {min:0,max:5000000,step:100000})
+      + fld("Chennai rate", ()=>c.chRate, v=>c.chRate=v, {min:6,max:12,step:0.1,suffix:"%"})
+      + fld("Chennai EMI", ()=>c.chEMI, v=>c.chEMI=v, {min:0,max:100000,step:1000})
+      + fld("Chennai extra prepay", ()=>c.chPrepay, v=>c.chPrepay=v, {min:0,max:100000,step:5000})),
+
+    grp("Agartala property (family)",
+      fld("Loan balance", ()=>c.agBal, v=>c.agBal=v, {min:0,max:20000000,step:500000})
+      + fld("Loan rate", ()=>c.agRate, v=>c.agRate=v, {min:6,max:12,step:0.1,suffix:"%"})
+      + fld("EMI", ()=>c.agEMI, v=>c.agEMI=v, {min:0,max:300000,step:5000})
+      + fld("Prepay per month", ()=>c.agPrepay, v=>c.agPrepay=v, {min:0,max:300000,step:5000})
+      + fld("Your share of rent", ()=>c.agShare, v=>c.agShare=v, {min:0,max:100,step:5,suffix:"%"})
+      + fld("Maintenance", ()=>c.agMaint, v=>c.agMaint=v, {min:0,max:25,step:1,suffix:"%"})
+      + fld("Common fund share", ()=>c.commonFund, v=>c.commonFund=v, {min:0,max:10000000,step:250000})
+      + fld("Common fund received", ()=>c.commonFundYear, v=>c.commonFundYear=v, {min:2026,max:2040,step:1})),
+
+    grp("Property & vehicle values",
+      fld("Chennai property", ()=>a.chennaiProperty, v=>a.chennaiProperty=v, {min:0,max:30000000,step:500000})
+      + fld("Agartala share value", ()=>a.agartalaProperty, v=>a.agartalaProperty=v, {min:0,max:50000000,step:500000})
+      + fld("Vehicle", ()=>a.vehicle, v=>a.vehicle=v, {min:0,max:3000000,step:50000})),
+
+    grp("Insurance",
+      fld("Health — personal floater", ()=>a.healthPersonal, v=>a.healthPersonal=v, {min:0,max:10000000,step:100000})
+      + fld("Health — employer", ()=>a.healthEmployer, v=>a.healthEmployer=v, {min:0,max:5000000,step:100000})
+      + fld("Term life — you", ()=>a.termSelf, v=>a.termSelf=v, {min:0,max:50000000,step:2500000})
+      + fld("Term life — wife", ()=>a.termSpouse, v=>a.termSpouse=v, {min:0,max:50000000,step:2500000})),
+
+    grp("Your data",
+      `<div class="addbtn" onclick="RUN('${H(exportData)}')">${icon("square.and.arrow.up",18)}<span>Export a backup file</span></div>`
+      + `<div class="addbtn" onclick="RUN('${H(importData)}')">${icon("arrow.triangle.2.circlepath",18)}<span>Restore from a backup</span></div>`
+      + `<div class="addbtn danger" onclick="RUN('${H(()=>{ if(confirm("Reset everything to the default plan? This wipes your saved numbers on this device.")){ localStorage.removeItem(KEY); location.reload(); } })}')">${icon("trash",18)}<span>Reset to defaults</span></div>`,
+      "Everything stays in this browser on this device. Nothing is uploaded anywhere. Clearing your browser data will erase it, so export a backup now and then."),
+
+    grp("Install it like an app",
+      note("iPhone: open in Safari → Share → Add to Home Screen.\nAndroid: open in Chrome → ⋮ menu → Add to Home screen / Install app.\nDesktop: Chrome address bar → install icon.\n\nIt then opens full-screen with no browser chrome, and works offline — the whole app is this one file."))
+  ].join("");
+  return { title:"Settings", body };
+};
+
+/* =========================================================
+   EDITORS (sheets)
+   ========================================================= */
+const GOAL_SYMBOLS = ["car.fill","house.fill","graduationcap.fill","airplane","heart.fill",
+                      "briefcase.fill","gift.fill","camera.fill","building.2.fill","target"];
+const PAY_SYMBOLS  = ["cross.case.fill","shield.lefthalf.filled","graduationcap.fill","car.fill",
+                      "house.fill","building.columns.fill","tv.fill","wifi","creditcard.fill","calendar"];
+
+function editGoal(original, isNew){
+  const g = Object.assign({}, original);
+  openSheet({
+    title: isNew ? "New goal" : "Edit goal",
+    body(){
+      const yearsAway = Math.max(0, Math.round(g.targetYear) - new Date().getFullYear());
+      const warn = yearsAway <= 3 && g.bucket === "equity"
+        ? `⚠︎ This goal is only ${yearsAway} year${yearsAway===1?"":"s"} away. Equity can fall 30% in a bad year — liquid is usually the safer choice this close.` : "";
+      return card(sect("What are you saving for?")
+          + txt("", ()=>g.name, v=>{ g.name = v; }, {quiet:true})
+          + symbolPicker(GOAL_SYMBOLS, g.symbol, s => { g.symbol = s; refreshSheet(); }))
+        + card(sect("Target")
+          + fldS("Amount needed", ()=>g.target, v=>g.target=v, {min:50000,max:50000000,step:50000})
+          + fldS("Target year", ()=>g.targetYear, v=>g.targetYear=v, {min:2026,max:2050,step:1}))
+        + card(sect("Where the money sits")
+          + segmented(["Liquid / FD","Equity"], g.bucket === "liquid" ? 0 : 1, i => { g.bucket = i===0?"liquid":"equity"; refreshSheet(); })
+          + note(g.bucket === "liquid"
+              ? "Safe and steady — right for anything within about 3 years."
+              : "Higher growth, higher swings — right for 5+ year horizons.")
+          + (warn ? `<div class="note" style="color:${C.goals}">${esc(warn)}</div>` : ""))
+        + card(sect("Monthly funding")
+          + fldS("Contribution per month", ()=>g.monthly, v=>g.monthly=v, {min:0,max:500000,step:2500})
+          + fldS("Annual step-up", ()=>g.stepUpPct, v=>g.stepUpPct=v, {min:0,max:25,step:1,suffix:"%"})
+          + toggleS("Start only after the personal loan closes", ()=>g.afterDebtFree, v=>g.afterDebtFree=v))
+        + card(sect("Financing")
+          + fldS("Pay upfront", ()=>g.downPct, v=>g.downPct=v, {min:10,max:100,step:5,suffix:"%"})
+          + (g.downPct < 100
+              ? fldS("Loan rate", ()=>g.loanRate, v=>g.loanRate=v, {min:5,max:20,step:0.25,suffix:"%"})
+                + fldS("Loan tenure", ()=>g.loanYears, v=>g.loanYears=v, {min:1,max:20,step:1,suffix:"yrs"})
+                + row("You save", fmt(fundedTarget(g)), {tint:C.income})
+                + row("You finance", fmt(financed(g)), {tint:C.outgo}) : "")
+          + note(g.downPct < 100
+              ? "Only the upfront share needs saving; the rest becomes an EMI once you buy. Worth it when the loan rate is below your expected investment return."
+              : "100% means you buy it outright with no loan."))
+        + card(sect("Where you are today")
+          + fldS("Already saved for this", ()=>g.actual, v=>g.actual=v, {min:0,max:50000000,step:10000}))
+        + card(toggleS("Active", ()=>g.enabled, v=>g.enabled=v))
+        + (isNew ? "" : `<div class="addbtn danger" onclick="RUN('${H(()=>{ STORE.config.goals = STORE.config.goals.filter(x=>x.id!==g.id); save(); closeSheet(); if(STACK.length) back(); })}')">${icon("trash",18)}<span>Delete this goal</span></div>`);
+    },
+    onDone(){
+      if (!g.name.trim()) return;
+      const i = STORE.config.goals.findIndex(x => x.id === g.id);
+      if (i >= 0) STORE.config.goals[i] = g; else STORE.config.goals.push(g);
+      save();
+    }
+  });
+}
+
+function editRecurring(original, isNew){
+  const p = Object.assign({}, original);
+  const keys = Object.keys(FREQ);
+  openSheet({
+    title: isNew ? "New payment" : "Edit payment",
+    body(){
+      const m = Math.round(p.anchorMonth) - 1;
+      const name = MONTHS_LONG[m] || "that month";
+      const label = { monthly:"Due every month.", quarterly:`Due in ${name} and every third month after.`,
+                      halfYearly:`Due in ${name} and six months later.`, yearly:`Due each ${name}.` }[p.frequency];
+      return card(sect("What is it?")
+          + txt("", ()=>p.name, v=>{ p.name = v; }, {quiet:true})
+          + symbolPicker(PAY_SYMBOLS, p.symbol, s => { p.symbol = s; refreshSheet(); }))
+        + card(sect("How much, how often")
+          + fldS("Amount each time", ()=>p.amount, v=>p.amount=v, {min:0,max:1000000,step:1000})
+          + segmented(keys.map(k=>FREQ[k].label), keys.indexOf(p.frequency), i => { p.frequency = keys[i]; refreshSheet(); })
+          + row("Works out to", `${fmt(perYear(p))}/yr · ${fmt(perMonthAvg(p))}/mo`, {tint:C.outgo, em:true}))
+        + card(sect("When")
+          + fldS("Month it falls due", ()=>p.anchorMonth, v=>p.anchorMonth=v, {min:1,max:12,step:1})
+          + fldS("Starting year", ()=>p.anchorYear, v=>p.anchorYear=v, {min:2026,max:2040,step:1})
+          + note(label)
+          + note("For quarterly or half-yearly items, pick any one month it's due — the rest are worked out from there."))
+        + card(toggleS("Grows with inflation", ()=>p.inflate, v=>p.inflate=v)
+          + toggleS("Active", ()=>p.enabled, v=>p.enabled=v)
+          + note("Premiums and fees usually rise every year. Turn this off for anything fixed."))
+        + (isNew ? "" : `<div class="addbtn danger" onclick="RUN('${H(()=>{ STORE.config.recurring = STORE.config.recurring.filter(x=>x.id!==p.id); save(); closeSheet(); })}')">${icon("trash",18)}<span>Delete this payment</span></div>`);
+    },
+    onDone(){
+      if (!p.name.trim()) return;
+      const i = STORE.config.recurring.findIndex(x => x.id === p.id);
+      if (i >= 0) STORE.config.recurring[i] = p; else STORE.config.recurring.push(p);
+      save();
+    }
+  });
+}
+
+/* sheet-local field variants: re-render the sheet, not the screen */
+function fldS(label, get, set, o){
+  o = o || {};
+  const k = H(v => { const n = parseFloat(v); set(isFinite(n) ? n : 0); refreshSheet(); });
+  const val = get();
+  return `<div class="fld"><div class="top"><label>${esc(label)}</label>`
+    + `<input type="number" inputmode="decimal" value="${val}" onchange="RUNV('${k}', this.value)">`
+    + (o.suffix ? `<span class="sfx">${esc(o.suffix)}</span>` : "") + `</div>`
+    + (o.min !== undefined ? `<input type="range" min="${o.min}" max="${o.max}" step="${o.step||1}" value="${Math.min(o.max,Math.max(o.min,val))}"
+        oninput="this.closest('.fld').querySelector('input[type=number]').value=this.value"
+        onchange="RUNV('${k}', this.value)">` : "") + `</div>`;
+}
+function toggleS(label, get, set){
+  const k = H(() => { set(!get()); refreshSheet(); });
+  return `<div class="toggle" onclick="RUN('${k}')"><span>${esc(label)}</span><span class="sp"></span>`
+       + `<span class="sw${get()?" on":""}"><i></i></span></div>`;
+}
+
+/* ---------------- monthly check-in ---------------- */
+function openCheckIn(){
+  const c = STORE.config;
+  openSheet({
+    title:"Monthly check-in", doneLabel:"Save",
+    body(){
+      const a = STORE.actuals;
+      const sim = simulate(c, a.usValue, a.inValue);
+      const bd = driftBreakdown(sim.planNow(), c, a);
+      const ahead = bd.drift >= 0;
+      return card(`<div class="row"><span style="color:${ahead?C.income:C.goals};display:flex">${icon(ahead?"checkmark.seal.fill":"exclamationmark.triangle.fill",22)}</span>`
+          + `<div><div style="font-size:15px;font-weight:700">${esc(ahead ? fmt(bd.drift)+" ahead of plan" : fmt(-bd.drift)+" behind plan")}</div>`
+          + `<div class="note">Plan expects ${esc(fmt(bd.planned))} invested by now</div></div></div>`, {tight:true})
+        + card(sect("Liquid investments")
+          + fldS("US stocks", ()=>a.usValue, v=>a.usValue=v, {min:0,max:10000000,step:10000})
+          + fldS("India stocks + MF", ()=>a.inValue, v=>a.inValue=v, {min:0,max:10000000,step:10000})
+          + fldS("Emergency fund (FD + savings)", ()=>a.fdSavings, v=>a.fdSavings=v, {min:0,max:2000000,step:10000}))
+        + (c.goals.length ? card(sect("Saved per goal")
+          + c.goals.map(g => fldS(g.name, ()=>g.actual, v=>g.actual=v, {min:0,max:50000000,step:10000})).join("")
+          + note("Equity-bucket goals are funded from the same pool as your stocks — record what you've earmarked for each.")) : "")
+        + card(sect("Retirement accounts")
+          + fldS("EPF balance", ()=>a.epf, v=>a.epf=v, {min:0,max:10000000,step:50000})
+          + fldS("NPS balance", ()=>a.nps, v=>a.nps=v, {min:0,max:5000000,step:50000}))
+        + card(sect("Debt")
+          + fldS("Personal loan outstanding", ()=>a.plOutstanding, v=>a.plOutstanding=v, {min:0,max:1000000,step:10000}))
+        + card(linkCardInline("arrow.left.arrow.right","What is my drift costing me?", C.goals, ()=>{ closeSheet(); go("impact"); })
+          + linkCardInline("function","How is drift calculated?", C.wealth, ()=>{ closeSheet(); go("drift"); })
+          + linkCardInline("chart.xyaxis.line","History & trends", C.wealth, ()=>{ closeSheet(); SEGSTATE.wealth = 2; setTab(3); })
+          + note("Property values and insurance live in Settings — they change rarely."));
+    },
+    onDone(){
+      const a = STORE.actuals;
+      const sim = simulate(c, a.usValue, a.inValue);
+      const bd = driftBreakdown(sim.planNow(), c, a);
+      a.lastUpdated = new Date().toISOString();
+      const nw = netWorthOf(a, c, STORE.cards).net;
+      const liquidGoals = c.goals.filter(g => g.enabled && g.bucket === "liquid").reduce((t,g)=> t + (g.actual||0), 0);
+      addSnapshot({ id:uid(), date:new Date().toISOString(), us:a.usValue, ind:a.inValue,
+                    carFund:liquidGoals, fdSavings:a.fdSavings, epf:a.epf, nps:a.nps,
+                    loanOutstanding:a.plOutstanding, netWorth:nw, planned:bd.planned });
+      save();
+      if (c.driftAlert > 0 && Math.abs(bd.drift) > c.driftAlert){
+        const real = simulate(c, a.usValue, a.inValue, actualsOverride(a, c.goals));
+        setTimeout(()=> alert(deviationSummary(bd.drift, goalImpacts(sim, real, c))), 250);
+      }
+    },
+    onCancel(){ save(); }
+  });
+}
+function linkCardInline(symbol, title, tint, onTap){
+  return `<div class="row" style="cursor:pointer;padding:4px 0" onclick="RUN('${H(onTap)}')">`
+    + `<span style="color:${tint};display:flex">${icon(symbol)}</span>`
+    + `<span class="lbl em">${esc(title)}</span><span class="sp"></span>${chev()}</div>`;
+}
+
+/* ---------------- backup ---------------- */
+function exportData(){
+  const blob = new Blob([JSON.stringify(STORE, null, 2)], {type:"application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = "wealthpilot-backup-" + new Date().toISOString().slice(0,10) + ".json";
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=> URL.revokeObjectURL(url), 2000);
+}
+function importData(){
+  const inp = document.createElement("input");
+  inp.type = "file"; inp.accept = "application/json,.json";
+  inp.onchange = () => {
+    const f = inp.files && inp.files[0]; if (!f) return;
+    const rd = new FileReader();
+    rd.onload = () => {
+      try{
+        const b = JSON.parse(rd.result);
+        if (b.config) STORE.config = Object.assign(defaultConfig(), b.config);
+        if (b.actuals) STORE.actuals = Object.assign(defaultActuals(), b.actuals);
+        STORE.history = b.history || [];
+        if (b.cards) STORE.cards = b.cards;
+        STORE.privacy = !!b.privacy; PRIVACY = STORE.privacy;
+        STORE.theme = b.theme || "system";
+        save(); applyTheme(); render();
+        alert("Backup restored.");
+      }catch(e){ alert("That file didn't look like a WealthPilot backup."); }
+    };
+    rd.readAsText(f);
+  };
+  inp.click();
+}
+
+/* ---------------- boot ---------------- */
+function applyTheme(){
+  document.documentElement.setAttribute("data-theme", STORE.theme === "system" ? "" : STORE.theme);
+  if (STORE.theme === "system") document.documentElement.removeAttribute("data-theme");
+}
+/* Home-screen icon + manifest, generated in-page so this stays a single file. */
+function installMeta(){
+  try{
+    const cv = document.createElement("canvas");
+    cv.width = cv.height = 512;
+    const g = cv.getContext("2d");
+    const grad = g.createLinearGradient(0,0,512,512);
+    grad.addColorStop(0, "#292A6B"); grad.addColorStop(1, "#1A5C7A");
+    g.fillStyle = grad; g.fillRect(0,0,512,512);
+    g.strokeStyle = "#F09930"; g.lineWidth = 34; g.lineCap = "round"; g.lineJoin = "round";
+    g.beginPath(); g.moveTo(96,368); g.lineTo(200,256); g.lineTo(288,320); g.lineTo(416,150); g.stroke();
+    g.beginPath(); g.arc(416,150, 30, 0, Math.PI*2); g.fillStyle = "#FFFFFF"; g.fill();
+    const png = cv.toDataURL("image/png");
+    const link = document.createElement("link");
+    link.rel = "apple-touch-icon"; link.href = png;
+    document.head.appendChild(link);
+    const mf = { name:"WealthPilot", short_name:"WealthPilot", start_url:".", scope:".",
+      display:"standalone", background_color:"#EFEFF4", theme_color:"#595CD9",
+      icons:[{ src:png, sizes:"512x512", type:"image/png", purpose:"any maskable" }] };
+    const ml = document.createElement("link");
+    ml.rel = "manifest";
+    ml.href = URL.createObjectURL(new Blob([JSON.stringify(mf)], {type:"application/manifest+json"}));
+    document.head.appendChild(ml);
+  }catch(e){ /* icon is cosmetic — never block boot */ }
+}
+
+load();
+PRIVACY = STORE.privacy;
+applyTheme();
+render();
+installMeta();
+window.addEventListener("error", e => console.error("WealthPilot:", e.message));
+
+</script>
+</body>
+</html>
